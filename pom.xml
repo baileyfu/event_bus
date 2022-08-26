@@ -4,20 +4,20 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>io.github.eventsbus</groupId>
-    <artifactId>eventsbus-parent</artifactId>
+    <groupId>io.github.eventbus</groupId>
+    <artifactId>eventbus-parent</artifactId>
     <version>1.0.0</version>
     <modules>
-        <module>eventsbus</module>
-        <module>eventsbus-starter</module>
+        <module>eventbus-core</module>
+        <module>eventbus-starter</module>
     </modules>
     <packaging>pom</packaging>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>1.8</java.version>
-        <eventsbus.version>1.0-SNAPSHOT</eventsbus.version>
-        <eventsbus-starter.version>1.0-SNAPSHOT</eventsbus-starter.version>
+        <eventbus-core.version>1.0-SNAPSHOT</eventbus-core.version>
+        <eventbus-starter.version>1.0-SNAPSHOT</eventbus-starter.version>
         <spring-boot.version>2.5.3</spring-boot.version>
         <fastjson.version>1.2.78</fastjson.version>
     </properties>
