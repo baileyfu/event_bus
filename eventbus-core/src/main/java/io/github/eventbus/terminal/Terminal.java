@@ -1,4 +1,4 @@
-package io.github.eventsbus.terminal;
+package io.github.eventbus.terminal;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 

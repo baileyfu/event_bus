@@ -1,6 +1,6 @@
-package io.github.eventsbus.terminal;
+package io.github.eventbus.terminal;
 
-import io.github.eventsbus.constants.TerminalConfigConsts;
+import io.github.eventbus.constants.TerminalConfigConsts;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

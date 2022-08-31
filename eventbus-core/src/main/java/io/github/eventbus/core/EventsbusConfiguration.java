@@ -1,6 +1,6 @@
-package io.github.eventsbus.core;
+package io.github.eventbus.core;
 
-import io.github.eventsbus.terminal.TerminalFactory;
+import io.github.eventbus.terminal.TerminalFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

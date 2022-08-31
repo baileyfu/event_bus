@@ -1,4 +1,4 @@
-package io.github.eventsbus.constants;
+package io.github.eventbus.constants;
 
 /**
  * @author ALi
@@ -7,7 +7,7 @@ package io.github.eventsbus.constants;
  * @description
  */
 public class TerminalConfigConsts {
-    public static final String NAME = "eventsbus.terminal.name";
-    public static final String IP = "eventsbus.terminal.ip";
-    public static final String PORT = "eventsbus.terminal.port";
+    public static final String NAME = "eventbus.terminal.name";
+    public static final String IP = "eventbus.terminal.ip";
+    public static final String PORT = "eventbus.terminal.port";
 }

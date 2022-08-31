@@ -1,1 +1,3 @@
-include 'eventbus','eventbus-starter'
+rootProject.name = 'eventbus'
+include 'eventbus-core'
+include 'eventbus-starter'

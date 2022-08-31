@@ -1,7 +1,7 @@
-package io.github.eventsbus;
+package io.github.eventbus;
 
-import io.github.eventsbus.exception.EventsbusException;
-import io.github.eventsbus.sources.EventSource;
+import io.github.eventbus.exception.EventsbusException;
+import io.github.eventbus.sources.EventSource;
 import org.springframework.util.Assert;
 
 import java.util.function.Supplier;
@@ -14,7 +14,7 @@ import java.util.function.Supplier;
  * @date 2022-05-26 13:56
  * @description
  */
-public class EBPub extends BusTemplate{
+public class EBPub extends BusTemplate {
     public EBPub(String busName, EventSource source){
         super(busName,source);
     }

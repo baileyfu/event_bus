@@ -1,0 +1,9 @@
+version '1.0.0-SNAPSHOT'
+ext{
+    fastjsonVersion='1.2.78'
+    commonsLang3Version='3.12.0'
+}
+dependencies {
+    api "com.alibaba:fastjson:$fastjsonVersion"
+    api "org.apache.commons:commons-lang3:$commonsLang3Version"
+}

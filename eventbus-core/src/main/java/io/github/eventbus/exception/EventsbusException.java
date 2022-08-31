@@ -1,4 +1,4 @@
-package io.github.eventsbus.exception;
+package io.github.eventbus.exception;
 
 /**
  * @author ALi

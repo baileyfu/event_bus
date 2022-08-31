@@ -1,6 +1,6 @@
-package io.github.eventsbus.annotation;
+package io.github.eventbus.annotation;
 
-import io.github.eventsbus.core.EventsbusConfiguration;
+import io.github.eventbus.core.EventsbusConfiguration;
 import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.ElementType;

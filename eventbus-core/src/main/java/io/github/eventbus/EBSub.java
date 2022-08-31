@@ -1,6 +1,6 @@
-package io.github.eventsbus;
+package io.github.eventbus;
 
-import io.github.eventsbus.sources.EventSource;
+import io.github.eventbus.sources.EventSource;
 import org.springframework.util.Assert;
 
 import java.util.function.Consumer;
@@ -13,7 +13,7 @@ import java.util.function.Consumer;
  * @date 2022-05-26 13:56
  * @description
  */
-public class EBSub extends BusTemplate{
+public class EBSub extends BusTemplate {
     private EventSource source;
     private Consumer<Object> doNothingHandler;
 

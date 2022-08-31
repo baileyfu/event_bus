@@ -1,18 +1,55 @@
-plugins {
-    id 'java'
+//全局配置，配置 Gradle 版本和 Maven 依赖，所有项目共享
+allprojects {
+    group 'io.github.eventbus'
+    version '1.0.0-SNAPSHOT'
+
+    apply plugin: 'java'
+    apply plugin: 'java-library'
+    apply plugin: 'maven-publish'
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+
+    repositories {
+        mavenLocal()
+        maven{ url 'https://maven.aliyun.com/nexus/content/groups/public/'}
+        mavenCentral()
+    }
+
+    dependencies {
+        implementation platform('org.springframework.boot:spring-boot-dependencies:2.5.3')
+        implementation "org.springframework.boot:spring-boot-starter"
+        testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+        testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+    }
+
+    // 打包sourcesJar任务
+    task sourcesJar(type: Jar, dependsOn: classes) {
+        classifier = 'sources'
+        from sourceSets.main.allSource
+    }
+    publishing{
+        publications{
+            mavenJava(MavenPublication){
+                groupId project.group
+                artifactId project.name
+                version project.version
+                from components.java
+                artifact sourcesJar
+            }
+        }
+        repositories {
+            maven {
+                url "${repo_url_github}"
+                credentials {
+                    username "${repo_user_github}"
+                    password "${repo_pass_github}"
+                }
+            }
+        }
+    }
+    publish.dependsOn(build)
 }
 
-group 'coco'
-version '1.0-SNAPSHOT'
-
-sourceCompatibility = 1.8
-
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.8.1'
-    compile group: 'localRepo.net.sourceforge', name: 'javacsv', version: '2.1'
-
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
 }

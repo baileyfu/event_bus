@@ -1,6 +1,6 @@
-package io.github.eventsbus;
+package io.github.eventbus;
 
-import io.github.eventsbus.sources.EventSource;
+import io.github.eventbus.sources.EventSource;
 
 /**
  * @author ALi

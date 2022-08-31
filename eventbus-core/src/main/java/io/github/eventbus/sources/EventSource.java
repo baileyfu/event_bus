@@ -1,7 +1,7 @@
-package io.github.eventsbus.sources;
+package io.github.eventbus.sources;
 
-import io.github.eventsbus.exception.EventsbusException;
-import io.github.eventsbus.terminal.Terminal;
+import io.github.eventbus.exception.EventsbusException;
+import io.github.eventbus.terminal.Terminal;
 
 /**
  * @author ALi
