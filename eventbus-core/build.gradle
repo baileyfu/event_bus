@@ -2,8 +2,10 @@ version '1.0.0-SNAPSHOT'
 ext{
     fastjsonVersion='1.2.78'
     commonsLang3Version='3.12.0'
+    ioGithubCommonsVersion='1.1.0-SNAPSHOT'
 }
 dependencies {
-    api "com.alibaba:fastjson:$fastjsonVersion"
-    api "org.apache.commons:commons-lang3:$commonsLang3Version"
+    implementation "com.alibaba:fastjson:$fastjsonVersion"
+    implementation "org.apache.commons:commons-lang3:$commonsLang3Version"
+    //implementation "io.github.ali:commons:$ioGithubCommonsVersion"
 }

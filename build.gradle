@@ -1,5 +1,4 @@
-//全局配置，配置 Gradle 版本和 Maven 依赖，所有项目共享
-allprojects {
+subprojects {
     group 'io.github.eventbus'
     version '1.0.0-SNAPSHOT'
 
@@ -12,6 +11,13 @@ allprojects {
     repositories {
         mavenLocal()
         maven{ url 'https://maven.aliyun.com/nexus/content/groups/public/'}
+        maven{
+            url "${repo_url_github}"
+            credentials {
+                username "${repo_user_github}"
+                password "${repo_pass_github}"
+            }
+        }
         mavenCentral()
     }
 

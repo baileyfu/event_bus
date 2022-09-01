@@ -1,6 +1,6 @@
-package io.github.eventbus.terminal;
+package io.github.eventbus.core.terminal;
 
-import io.github.eventbus.constants.TerminalConfigConsts;
+import io.github.eventbus.constants.TerminalConfigConst;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,9 +23,9 @@ public class TerminalFactory implements EnvironmentAware {
     public void setEnvironment(Environment environment) {
         if (INSTANCE == null) {
             INSTANCE = new Terminal();
-            String name = environment.getProperty(TerminalConfigConsts.NAME);
-            String ip = environment.getProperty(TerminalConfigConsts.IP);
-            String port = environment.getProperty(TerminalConfigConsts.PORT);
+            String name = environment.getProperty(TerminalConfigConst.NAME);
+            String ip = environment.getProperty(TerminalConfigConst.IP);
+            String port = environment.getProperty(TerminalConfigConst.PORT);
             try{
                 URL url = new URL("http", ip == null ? InetAddress.getLocalHost().getHostAddress():ip, NumberUtils.toInt(port,0), "");
                 INSTANCE.setUrl(url);

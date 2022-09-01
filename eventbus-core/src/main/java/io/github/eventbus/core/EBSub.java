@@ -1,8 +1,9 @@
-package io.github.eventbus;
+package io.github.eventbus.core;
 
-import io.github.eventbus.sources.EventSource;
+import io.github.eventbus.core.sources.EventSource;
 import org.springframework.util.Assert;
 
+import java.util.List;
 import java.util.function.Consumer;
 
 /**
@@ -13,12 +14,13 @@ import java.util.function.Consumer;
  * @date 2022-05-26 13:56
  * @description
  */
-public class EBSub extends BusTemplate {
-    private EventSource source;
+public class EBSub{
+    private List<EventSource> sources;
     private Consumer<Object> doNothingHandler;
 
-    public EBSub(String busName, EventSource source) {
-        super(busName,source);
+    public EBSub(List<EventSource> sources) {
+        Assert.noNullElements(sources, "the EBSub has no EventSource!");
+        this.sources = sources;
         doNothingHandler = (message) -> {};
     }
 
