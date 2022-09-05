@@ -1,6 +1,9 @@
-package io.github.eventbus.core.sources;
+﻿package io.github.eventbus.core.sources;
 
+import io.github.eventbus.core.terminal.Terminal;
 import io.github.eventbus.exception.EventbusException;
+
+import java.util.Map;
 
 /**
  * @author ALi
@@ -9,9 +12,23 @@ import io.github.eventbus.exception.EventbusException;
  * @description
  */
 public interface EventSource {
-    public String getName();
+    /**
+     * 事件源名称,唯一
+     * @return
+     */
+    String getName();
 
-    public void push(String eventName, Object message) throws EventbusException;
+    /**
+     * 事件入栈
+     * @param eventName
+     * @param message
+     * @throws EventbusException
+     */
+    void push(String eventName, Object message) throws EventbusException;
 
-    public Object pop(String eventName) throws EventbusException;
+    int consume(Map<String, EventConsumer> consumers) throws EventbusException;
+
+    interface EventConsumer {
+        void accept(Terminal sourceTerminal, String eventName, Object message);
+    }
 }

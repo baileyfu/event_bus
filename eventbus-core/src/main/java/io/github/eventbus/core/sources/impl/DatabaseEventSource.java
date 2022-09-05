@@ -2,6 +2,10 @@
 
 import io.github.eventbus.core.sources.AbstractEventSource;
 import io.github.eventbus.core.sources.Event;
+import io.github.eventbus.core.sources.ManualConsumeEventSource;
+import io.github.eventbus.exception.EventbusException;
+
+import java.util.Map;
 
 /**
  * @author ALi
@@ -9,7 +13,7 @@ import io.github.eventbus.core.sources.Event;
  * @date 2022-09-01 15:44
  * @description
  */
-public class DatabaseEventSource extends AbstractEventSource {
+public class DatabaseEventSource extends ManualConsumeEventSource {
     public DatabaseEventSource(String name) {
         super(name);
     }
@@ -17,5 +21,11 @@ public class DatabaseEventSource extends AbstractEventSource {
     @Override
     protected void save(Event event) throws Exception {
         //TODO
+    }
+
+    @Override
+    public int consume(Map<String, EventConsumer> consumers) throws EventbusException {
+        //TODO
+        return 0;
     }
 }

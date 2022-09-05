@@ -3,6 +3,8 @@ package io.github.eventbus.core.sources;
 import io.github.eventbus.exception.EventbusException;
 
 import io.github.eventbus.core.terminal.TerminalFactory;
+import org.springframework.context.EnvironmentAware;
+import org.springframework.core.env.Environment;
 import org.springframework.util.Assert;
 
 
@@ -12,12 +14,18 @@ import org.springframework.util.Assert;
  * @date 2022-06-01 17:33
  * @description
  */
-public abstract class AbstractEventSource implements EventSource {
+public abstract class AbstractEventSource implements EventSource, EnvironmentAware {
+    protected Environment environment;
     private String name;
 
     public AbstractEventSource(String name) {
         Assert.hasLength(name, "the EventSource'name can not be empty!");
         this.name = name;
+    }
+
+    @Override
+    public void setEnvironment(Environment environment) {
+        this.environment = environment;
     }
 
     @Override
@@ -38,10 +46,5 @@ public abstract class AbstractEventSource implements EventSource {
             throw new EventbusException("EventSource push error!", e);
         }
     }
-
-    @Override
-    public Object pop(String eventName) throws EventbusException {
-        return null;
-    }
-    abstract protected void save(Event event)throws Exception;
+    abstract protected void save(Event event) throws Exception;
 }

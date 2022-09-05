@@ -8,4 +8,6 @@ package io.github.eventbus.constants;
  */
 public class EventbusConfigConst {
     public static final String OPEN = "eventbus.open";
+    public static final String BCT_OPEN = "eventbus.broadcast.open";
+    public static final String LSN_OPEN = "eventbus.listen.open";
 }

@@ -3,6 +3,7 @@ package io.github.eventbus.core.sources.route;
 import io.github.eventbus.core.sources.EventSource;
 
 /**
+ * 订阅路由器-决定当前节点的事件发送到那些事件源
  * @author ALi
  * @version 1.0
  * @date 2022-08-31 18:27

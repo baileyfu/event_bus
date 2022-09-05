@@ -10,16 +10,19 @@ import org.slf4j.LoggerFactory;
  * @date 2022-08-31 16:13
  * @description
  */
-public class BusBroadcaster {
-    private static Logger LOGGER = LoggerFactory.getLogger(BusBroadcaster.class);
-    private static BusBroadcaster INSTANCE;
+public class EventBusBroadcaster {
+    private static Logger LOGGER = LoggerFactory.getLogger(EventBusBroadcaster.class);
+    private static EventBusBroadcaster INSTANCE;
 
     private EBPub ebpub;
     private boolean opening;
-    BusBroadcaster(EBPub ebpub, boolean opening) {
+    EventBusBroadcaster(EBPub ebpub, boolean opening) {
         this.ebpub = ebpub;
         this.opening = opening;
         INSTANCE = this;
+        if(!this.opening){
+            LOGGER.warn("EventBusBroadcaster has already closed , you can not broadcast any event to EventBus!");
+        }
     }
 
     public static boolean broadcast(String eventName) {

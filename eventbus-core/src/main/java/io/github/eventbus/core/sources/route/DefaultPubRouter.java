@@ -9,8 +9,9 @@
  * @description
  */
 public class DefaultPubRouter implements PubRouter {
+    public final static String[] PUB_TO_ALL = new String[]{"ALL"};
     @Override
     public String[] route(String eventName) {
-        return null;
+        return PUB_TO_ALL;
     }
 }

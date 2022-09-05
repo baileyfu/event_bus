@@ -3,9 +3,11 @@ ext{
     fastjsonVersion='1.2.78'
     commonsLang3Version='3.12.0'
     ioGithubCommonsVersion='1.1.0-SNAPSHOT'
+    rxjavaVersion='2.2.21'
 }
 dependencies {
     implementation "com.alibaba:fastjson:$fastjsonVersion"
     implementation "org.apache.commons:commons-lang3:$commonsLang3Version"
-    //implementation "io.github.ali:commons:$ioGithubCommonsVersion"
+    implementation "io.reactivex.rxjava2:rxjava:$rxjavaVersion"
+    implementation "io.github.ali:commons:$ioGithubCommonsVersion"
 }
