@@ -8,9 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 事件总线-发布器
@@ -26,7 +24,7 @@ public class EBPub {
     private String[] sourceKeys;
     private PubRouterChain pubRouterChain;
 
-    EBPub(List<EventSource> sources, PubRouterChain pubRouterChain) {
+    EBPub(Collection<EventSource> sources, PubRouterChain pubRouterChain) {
         Assert.noNullElements(sources, "the EBPub has no EventSource!");
         this.sources = sources.stream().reduce(new HashMap<String, EventSource>(), (map, es) -> {
             Assert.isTrue(!map.containsKey(es.getName()), "duplicated EventSource name : '" + es.getName() + "'!");

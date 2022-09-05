@@ -1,6 +1,7 @@
-﻿package io.github.eventbus;
+package io.github.eventbus;
 
 import io.github.eventbus.core.EventBusListener;
+import io.github.eventbus.core.sources.filter.SubFilter;
 import io.github.eventbus.core.sources.impl.DatabaseEventSource;
 import io.github.eventbus.core.sources.impl.SpringEventSource;
 import io.github.eventbus.core.sources.route.PubRouter;
@@ -37,39 +38,47 @@ public class MyConfiguration {
             @Override
             public void handle(Terminal sourceTerminal, String eventName, Object message) {
                 //do something for account.add
+                System.out.println(eventName+" be handled ,  message : " + message+", from :"+sourceTerminal);
             }
         };
     }
     @Bean
     public EventBusListener.UniqueEventHandler allEventHandler(){
-        return new EventBusListener.UniqueEventHandler(){
-            @Override
-            public void handle(Terminal sourceTerminal, String eventName, Object message) {
-
-            }
+        return (sourceTerminal, eventName, message) -> {
+            System.out.println(eventName+" be handled by UniqueEventHandler ,  message : " + message);
+            System.out.println(sourceTerminal);
         };
     }
     @Bean
     public PubRouter learningPubRouter(){
         return new BasePubRouter() {
-            private List<String> globalEvent = Arrays.asList("learning.articleCreated");
-            private List<String> allEvent = Arrays.asList("learning.articleRead");
+            private List<String> eventToRemote = Arrays.asList("learning.articleCreated");
+            private List<String> eventToALl = Arrays.asList("learning.articleRead");
             @Override
             public String[] route(String eventName) {
-                return allEvent.contains(eventName) ? all :
-                        globalEvent.contains(eventName) ? global : local;
+                return eventToALl.contains(eventName) ? all :
+                        eventToRemote.contains(eventName) ? global : null;
             }
         };
     }
     @Bean
-    public PubRouter userPubRouter(){
+    public PubRouter userAndAccountPubRouter(){
         return new BasePubRouter() {
-            private List<String> globalEvent = Arrays.asList("user.commit");
-            private List<String> allEvent = Arrays.asList("user.login");
+            private List<String> eventToRemote = Arrays.asList("user.commit","account.add");
+            private List<String> eventToALl = Arrays.asList("user.login");
             @Override
             public String[] route(String eventName) {
-                return allEvent.contains(eventName) ? all :
-                        globalEvent.contains(eventName) ? global : local;
+                return eventToALl.contains(eventName) ? all :
+                        eventToRemote.contains(eventName) ? global : null;
+            }
+        };
+    }
+    public SubFilter subFilter(){
+        return new SubFilter(){
+            private List<String> acceptedEvent = Arrays.asList("some.action", "account.add");
+            @Override
+            public boolean doFilter(String eventName) {
+                return acceptedEvent.contains(eventName);
             }
         };
     }

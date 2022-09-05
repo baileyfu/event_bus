@@ -1,4 +1,4 @@
-﻿package io.github.eventbus.core.sources;
+package io.github.eventbus.core.sources;
 
 import io.github.eventbus.core.terminal.Terminal;
 import io.github.eventbus.exception.EventbusException;
@@ -26,6 +26,12 @@ public interface EventSource {
      */
     void push(String eventName, Object message) throws EventbusException;
 
+    /**
+     * 事件处理,调用者应处理此方法可能抛出的异常
+     * @param consumers
+     * @return
+     * @throws EventbusException
+     */
     int consume(Map<String, EventConsumer> consumers) throws EventbusException;
 
     interface EventConsumer {

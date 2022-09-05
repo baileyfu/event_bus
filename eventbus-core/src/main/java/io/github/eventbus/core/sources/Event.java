@@ -2,6 +2,7 @@ package io.github.eventbus.core.sources;
 
 
 import io.github.eventbus.core.terminal.Terminal;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.springframework.util.Assert;
 
 /**
@@ -26,6 +27,16 @@ public class Event {
     public Terminal getSourceTerminal() {
         return sourceTerminal;
     }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this)
+                .append("name", name)
+                .append("message", message)
+                .append("sourceTerminal", sourceTerminal)
+                .toString();
+    }
+
     public static class EventBuilder{
         private Event event;
         private EventBuilder(){

@@ -1,5 +1,6 @@
-﻿package io.github.eventbus.core.sources.filter;
+package io.github.eventbus.core.sources.filter;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -9,9 +10,9 @@ import java.util.List;
  * @description
  */
 public class SubFilterChain implements SubFilter{
-    private List<SubFilter> filters;
+    private Collection<SubFilter> filters;
 
-    public SubFilterChain(List<SubFilter> filters) {
+    public SubFilterChain(Collection<SubFilter> filters) {
         this.filters = filters;
     }
     @Override

@@ -1,4 +1,4 @@
-﻿package io.github.eventbus.constants;
+package io.github.eventbus.constants;
 
 /**
  * @author ALi

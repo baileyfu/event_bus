@@ -9,5 +9,7 @@ dependencies {
     implementation "com.alibaba:fastjson:$fastjsonVersion"
     implementation "org.apache.commons:commons-lang3:$commonsLang3Version"
     implementation "io.reactivex.rxjava2:rxjava:$rxjavaVersion"
-    implementation "io.github.ali:commons:$ioGithubCommonsVersion"
+    //implementation "io.github.ali:commons:$ioGithubCommonsVersion"
+    implementation "org.springframework.boot:spring-boot-starter-test"
+    implementation "org.springframework.boot:spring-boot-starter-web"
 }

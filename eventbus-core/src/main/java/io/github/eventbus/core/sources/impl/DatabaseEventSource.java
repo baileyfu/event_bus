@@ -1,4 +1,4 @@
-﻿package io.github.eventbus.core.sources.impl;
+package io.github.eventbus.core.sources.impl;
 
 import io.github.eventbus.core.sources.AbstractEventSource;
 import io.github.eventbus.core.sources.Event;
@@ -25,7 +25,6 @@ public class DatabaseEventSource extends ManualConsumeEventSource {
 
     @Override
     public int consume(Map<String, EventConsumer> consumers) throws EventbusException {
-        //TODO
         return 0;
     }
 }

@@ -1,4 +1,4 @@
-﻿package io.github.eventbus;
+package io.github.eventbus;
 
 import io.github.eventbus.core.sources.route.PubRouter;
 

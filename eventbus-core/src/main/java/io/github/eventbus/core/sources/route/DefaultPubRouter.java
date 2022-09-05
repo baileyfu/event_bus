@@ -1,4 +1,4 @@
-﻿package io.github.eventbus.core.sources.route;
+package io.github.eventbus.core.sources.route;
 
 /**
  * 默认路由-发送到所有事件源

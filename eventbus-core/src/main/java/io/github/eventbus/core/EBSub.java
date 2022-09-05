@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,17 +25,18 @@ import java.util.concurrent.TimeUnit;
  * @description
  */
 public class EBSub {
-    private static Logger LOGGER = LoggerFactory.getLogger(EBSub.class);
-    private static EventSource.EventConsumer doNothingHandler = (sourceTerminal, eventName, message) -> {
-        if(LOGGER.isDebugEnabled()){
-            LOGGER.debug("doNothingHandler consumed event ? from ?", eventName, sourceTerminal);
+    private Logger logger = LoggerFactory.getLogger(EBSub.class);
+    private EventSource.EventConsumer doNothingHandler = (sourceTerminal, eventName, message) -> {
+        System.out.println("DO NOTHING--->" + eventName);
+        if(logger.isDebugEnabled()){
+            logger.debug("doNothingHandler consumed event ? from ?", eventName, sourceTerminal);
         }
     };
-    private List<EventSource> sources;
+    private Collection<EventSource> sources;
     private Map<String, EventSource.EventConsumer> consumerMap;
     private SubFilterChain subFilterChain;
 
-    EBSub(List<EventSource> sources, SubFilterChain subFilterChain) {
+    EBSub(Collection<EventSource> sources, SubFilterChain subFilterChain) {
         Assert.noNullElements(sources, "the EBSub has no EventSource!");
         this.sources = sources;
         this.consumerMap = new HashMap<String, EventSource.EventConsumer>() {
@@ -65,12 +67,12 @@ public class EBSub {
                     Thread.sleep(manualConsumeEventSource.gePauseIfNotConsumed());
                 }
             } catch (Exception e) {
-                LOGGER.error(manualConsumeEventSource.getName() + " consume error !", e);
+                logger.error(manualConsumeEventSource.getName() + " consume error !", e);
                 // 消费出错后暂停100ms
                 try {
                     Thread.sleep(100l);
                 } catch (InterruptedException ie) {
-                    LOGGER.error(manualConsumeEventSource.getName() + " sleeping after consuming failed error !", ie);
+                    logger.error(manualConsumeEventSource.getName() + " sleeping after consuming failed error !", ie);
                 }
             }
         });
@@ -84,7 +86,7 @@ public class EBSub {
                     MixedActionGenerator.unloadAction(eventSource.getName(),true);
                 }
             } catch (Exception e) {
-                LOGGER.error("EBSub stop EventSource named '" + eventSource.getName() + "' error!", e);
+                logger.error("EBSub stop EventSource named '" + eventSource.getName() + "' error!", e);
             }
         }
     }
@@ -104,9 +106,13 @@ public class EBSub {
         consumerMap.put(eventName, handlerConvertToConsumer(eventHandler));
     }
     private EventSource.EventConsumer handlerConvertToConsumer(EventBusListener.EventHandler eventHandler){
-        return (terminal, eventName, message) -> {
+        return (sourceTerminal, eventName, message) -> {
             if (subFilterChain.doFilter(eventName)) {
-                eventHandler.handle(terminal, eventName, message);
+                eventHandler.handle(sourceTerminal, eventName, message);
+            }else{
+                if(logger.isDebugEnabled()){
+                    logger.debug("EBSub.EventConsumer has filtered the event ? from ?", eventName, sourceTerminal);
+                }
             }
         };
     }

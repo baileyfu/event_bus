@@ -1,4 +1,4 @@
-﻿package io.github.eventbus.core.sources.impl;
+package io.github.eventbus.core.sources.impl;
 
 import io.github.eventbus.core.sources.AutoConsumeEventSource;
 import io.github.eventbus.core.sources.Event;
@@ -25,37 +25,40 @@ import java.util.Map;
 public class SpringEventSource extends AutoConsumeEventSource implements ApplicationContextAware {
     private Logger logger = LoggerFactory.getLogger(SpringEventSource.class);
     private AbstractApplicationContext applicationContext;
-    private Map<String, EventSource.EventConsumer> consumers;
+    private boolean running;
     public SpringEventSource(String name) {
         super(name);
-        applicationContext.addApplicationListener(new ApplicationListener<PayloadApplicationEvent>(){
-            @Override
-            public void onApplicationEvent(PayloadApplicationEvent applicationEvent) {
-                Object payload = applicationEvent.getPayload();
-                if (payload == null || !payload.getClass().isAssignableFrom(Event.class)) {
-                    return;
-                }
-                if (consumers != null) {
-                    Event event = (Event) applicationEvent.getPayload();
-                    try{
-                        EventSource.EventConsumer eventConsumer = consumers.get(event.getName());
-                        eventConsumer.accept(event.getSourceTerminal(), event.getName(), event.getMessage());
-                    } catch (Exception e) {
-                        logger.error("SpringEventSource consume event '" + event.getName() + "' error!", e);
-                    }
-                }
-            }
-        });
+        running = false;
     }
 
     @Override
     public void startConsume(Map<String, EventSource.EventConsumer> consumers) {
-        this.consumers = consumers;
+        applicationContext.addApplicationListener(new ApplicationListener<PayloadApplicationEvent>(){
+            @Override
+            public void onApplicationEvent(PayloadApplicationEvent applicationEvent) {
+                if(running){
+                    Object payload = applicationEvent.getPayload();
+                    if (payload == null || !Event.class.isAssignableFrom(payload.getClass())) {
+                        return;
+                    }
+                    if (consumers != null) {
+                        Event event = (Event) applicationEvent.getPayload();
+                        try{
+                            EventSource.EventConsumer eventConsumer = consumers.get(event.getName());
+                            eventConsumer.accept(event.getSourceTerminal(), event.getName(), event.getMessage());
+                        } catch (Exception e) {
+                            logger.error("SpringEventSource consume event '" + event.getName() + "' error!", e);
+                        }
+                    }
+                }
+            }
+        });
+        running = true;
     }
 
     @Override
     public void stopConsume() {
-        this.consumers = null;
+        running = false;
     }
 
     @Override

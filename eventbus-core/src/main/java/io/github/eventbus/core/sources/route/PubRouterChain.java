@@ -1,10 +1,12 @@
-﻿package io.github.eventbus.core.sources.route;
+package io.github.eventbus.core.sources.route;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author ALi
@@ -15,16 +17,15 @@ import java.util.List;
 public class PubRouterChain implements PubRouter{
     private Logger logger = LoggerFactory.getLogger(PubRouterChain.class);
     private List<PubRouter> routers;
-    public PubRouterChain(List<PubRouter> routers){
+    public PubRouterChain(Collection<PubRouter> routers){
         if (routers == null || routers.size() == 0) {
             logger.warn("the EBPub has no routers , use DefaultRouter instead!");
-            routers = new ArrayList<>();
-            routers.add(new DefaultPubRouter());
-        } else if (routers.size() > 1) {
-            routers.sort((r1, r2) -> r1.getPriority() < r2.getPriority() ? 1
-                    : r1.getPriority() > r2.getPriority() ? -1 : 0);
+            this.routers = new ArrayList<>();
+            this.routers.add(new DefaultPubRouter());
+        } else {
+            this.routers = routers.stream().sorted((r1, r2) -> r1.getPriority() < r2.getPriority() ? 1
+                    : r1.getPriority() > r2.getPriority() ? -1 : 0).collect(Collectors.toList());
         }
-        this.routers = routers;
     }
     @Override
     public String[] route(String eventName) {

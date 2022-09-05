@@ -1,4 +1,4 @@
-﻿package io.github.eventbus.core.sources.filter;
+package io.github.eventbus.core.sources.filter;
 
 /**
  * 事件过滤器-决定那些事件能被当前节点消费

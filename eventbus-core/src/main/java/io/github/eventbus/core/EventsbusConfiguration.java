@@ -31,15 +31,15 @@ public class EventsbusConfiguration {
     public EBPub ebpub(ApplicationContext applicationContext){
         Map<String,EventSource> esMap = applicationContext.getBeansOfType(EventSource.class);
         Map<String,PubRouter> prMap = applicationContext.getBeansOfType(PubRouter.class);
-        PubRouterChain pubRouterChain = new PubRouterChain(prMap == null ? null : (List) prMap.values());
-        return new EBPub(esMap == null ? null : (List) esMap.values(), pubRouterChain);
+        PubRouterChain pubRouterChain = new PubRouterChain(prMap == null ? null : prMap.values());
+        return new EBPub(esMap == null ? null : esMap.values(), pubRouterChain);
     }
     @Bean
     public EBSub ebsub(ApplicationContext applicationContext){
         Map<String, EventSource> esMap = applicationContext.getBeansOfType(EventSource.class);
         Map<String, SubFilter> sfMap = applicationContext.getBeansOfType(SubFilter.class);
-        SubFilterChain subFilterChain = new SubFilterChain(sfMap == null ? null : (List) sfMap.values());
-        return new EBSub(esMap == null ? null : (List) esMap.values(), subFilterChain);
+        SubFilterChain subFilterChain = new SubFilterChain(sfMap == null ? null : sfMap.values());
+        return new EBSub(esMap == null ? null : esMap.values(), subFilterChain);
     }
     @Bean
     public EventBusBroadcaster eventBusBroadcaster(Environment environment, EBPub ebpub){
@@ -52,6 +52,6 @@ public class EventsbusConfiguration {
         Map<String, EventBusListener.EventHandler> handlerMap = applicationContext.getBeansOfType(EventBusListener.EventHandler.class);
         boolean open = environment.getProperty(EventbusConfigConst.OPEN,Boolean.class,false);
         boolean lsnOpen = environment.getProperty(EventbusConfigConst.LSN_OPEN,Boolean.class,false);
-        return new EventBusListener(ebsub, handlerMap == null ? null : (List) handlerMap.values(), open && lsnOpen);
+        return new EventBusListener(ebsub, handlerMap == null ? null : handlerMap.values(), open && lsnOpen);
     }
 }

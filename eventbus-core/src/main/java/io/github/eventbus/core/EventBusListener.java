@@ -1,4 +1,4 @@
-﻿package io.github.eventbus.core;
+package io.github.eventbus.core;
 
 import io.github.eventbus.core.terminal.Terminal;
 import io.github.eventbus.exception.EventbusException;
@@ -8,6 +8,7 @@ import org.springframework.util.Assert;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -20,10 +21,10 @@ public class EventBusListener {
     private static Logger LOGGER = LoggerFactory.getLogger(EventBusListener.class);
 
     private EBSub ebsub;
-    List<EventHandler> handlers;
+    Collection<EventHandler> handlers;
     private boolean opening;
     private boolean started;
-    EventBusListener(EBSub ebsub, List<EventHandler> handlers, boolean opening) {
+    EventBusListener(EBSub ebsub, Collection<EventHandler> handlers, boolean opening) {
         this.ebsub = ebsub;
         this.handlers = handlers;
         this.opening = opening;
@@ -35,7 +36,7 @@ public class EventBusListener {
                 for (EventHandler handler : handlers) {
                     Assert.hasLength(handler.targetEventName(), "EventHandler's targetEventName can not be empty!");
                     ebsub.listen(handler.targetEventName(), handler);
-                    if (handler.getClass().isAssignableFrom(UniqueEventHandler.class)) {
+                    if (UniqueEventHandler.class.isAssignableFrom(handler.getClass())) {
                         ebsub.setUniqueEventHandler(handler);
                     }
                 }

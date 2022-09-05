@@ -1,4 +1,4 @@
-﻿package io.github.eventbus.core.sources;
+package io.github.eventbus.core.sources;
 
 import io.github.eventbus.exception.EventbusException;
 
@@ -23,7 +23,14 @@ public abstract class AutoConsumeEventSource extends AbstractEventSource{
         return 0;
     }
 
+    /**
+     * 启动消费,需对事件消费的异常进行处理以防止中断消费线程
+     * @param consumers
+     */
     public abstract void startConsume(Map<String, EventSource.EventConsumer> consumers);
 
+    /**
+     * 停止消费
+     */
     public abstract void stopConsume();
 }
