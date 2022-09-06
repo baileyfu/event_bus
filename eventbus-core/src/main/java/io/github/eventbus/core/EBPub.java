@@ -11,7 +11,8 @@ import org.springframework.util.Assert;
 import java.util.*;
 
 /**
- * 事件总线-发布器
+ * 事件总线-发布器<br/>
+ * 构造时会保证事件源名称唯一性
  *
  * @author ALi
  * @version 1.0

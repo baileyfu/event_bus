@@ -1,7 +1,6 @@
 package io.github.eventbus.core.sources.filter;
 
 import java.util.Collection;
-import java.util.List;
 
 /**
  * @author ALi

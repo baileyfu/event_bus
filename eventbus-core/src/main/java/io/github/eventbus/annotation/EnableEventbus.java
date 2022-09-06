@@ -1,6 +1,6 @@
 package io.github.eventbus.annotation;
 
-import io.github.eventbus.core.EventsbusConfiguration;
+import io.github.eventbus.core.EventbusConfiguration;
 import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.ElementType;
@@ -16,6 +16,6 @@ import java.lang.annotation.Target;
  */
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-@Import(EventsbusConfiguration.class)
-public @interface EnableEventsbus {
+@Import(EventbusConfiguration.class)
+public @interface EnableEventbus {
 }

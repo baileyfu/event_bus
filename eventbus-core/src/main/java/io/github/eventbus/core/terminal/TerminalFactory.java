@@ -18,18 +18,17 @@ import java.net.URL;
  */
 public class TerminalFactory implements EnvironmentAware {
     private static Logger logger= LoggerFactory.getLogger(TerminalFactory.class);
-    private static Terminal INSTANCE;
-
+    private static Terminal CURRENT_TERMINAL;
     public void setEnvironment(Environment environment) {
-        if (INSTANCE == null) {
-            INSTANCE = new Terminal();
+        if (CURRENT_TERMINAL == null) {
+            CURRENT_TERMINAL = new Terminal();
             String name = environment.getProperty(TerminalConfigConst.NAME);
             String ip = environment.getProperty(TerminalConfigConst.IP);
             String port = environment.getProperty(TerminalConfigConst.PORT);
             try{
                 URL url = new URL("http", ip == null ? InetAddress.getLocalHost().getHostAddress():ip, NumberUtils.toInt(port,0), "");
-                INSTANCE.setUrl(url);
-                INSTANCE.setName(name == null ? url.getHost() : name);
+                CURRENT_TERMINAL.setUrl(url);
+                CURRENT_TERMINAL.setName(name == null ? url.getHost() : name);
             }catch(Exception e){
                 logger.error(String.format("create Terminal error with 'name'=%s,'ip'=%s,'port'=%s",name,ip,port),e);
             }
@@ -37,6 +36,6 @@ public class TerminalFactory implements EnvironmentAware {
     }
 
     public static Terminal create(){
-        return INSTANCE;
+        return CURRENT_TERMINAL;
     }
 }

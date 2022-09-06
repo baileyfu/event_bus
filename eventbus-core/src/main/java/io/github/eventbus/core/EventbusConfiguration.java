@@ -12,7 +12,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -22,7 +21,7 @@ import java.util.Map;
  * @description
  */
 @Configuration
-public class EventsbusConfiguration {
+public class EventbusConfiguration {
     @Bean
     public TerminalFactory terminalFactory(){
         return new TerminalFactory();

@@ -12,7 +12,6 @@ import org.springframework.util.Assert;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -35,18 +34,14 @@ public class EBSub {
     private Collection<EventSource> sources;
     private Map<String, EventSource.EventConsumer> consumerMap;
     //封装对consumerMap的操作
-    private Function<String, EventSource.EventConsumer> consumerGetter = (eventName) -> consumerMap.get(eventName);
+    private Function<String, EventSource.EventConsumer> consumerGetter;
     private SubFilterChain subFilterChain;
 
     EBSub(Collection<EventSource> sources, SubFilterChain subFilterChain) {
         Assert.noNullElements(sources, "the EBSub has no EventSource!");
         this.sources = sources;
-        this.consumerMap = new HashMap<String, EventSource.EventConsumer>() {
-            @Override
-            public EventSource.EventConsumer get(Object key) {
-                return super.getOrDefault(key, doNothingHandler);
-            }
-        };
+        this.consumerMap = new HashMap<>();
+        this.consumerGetter = (eventName) -> consumerMap.getOrDefault(eventName, doNothingHandler);
         this.subFilterChain = subFilterChain;
     }
     void start() throws EventbusException{
@@ -95,12 +90,7 @@ public class EBSub {
     //当设置了uniqueEventHandler后,consumerMap将被忽略,所有事件都由uniqueEventConsumer处理
     void setUniqueEventHandler(EventBusListener.EventHandler uniqueEventHandler){
         EventSource.EventConsumer uniqueEventConsumer = handlerConvertToConsumer(uniqueEventHandler);
-        this.consumerMap = new HashMap<>() {
-            @Override
-            public EventSource.EventConsumer get(Object key) {
-                return uniqueEventConsumer;
-            }
-        };
+        consumerGetter = (eventName) -> uniqueEventConsumer;
     }
     void listen(String eventName, EventBusListener.EventHandler eventHandler) {
         Assert.hasLength(eventName, "'eventName' can not be empty.");

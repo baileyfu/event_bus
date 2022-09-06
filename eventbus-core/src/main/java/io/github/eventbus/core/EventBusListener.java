@@ -32,16 +32,19 @@ public class EventBusListener {
     }
     @PostConstruct
     public void start() throws EventbusException {
+        if (started) {
+            return;
+        }
         if (opening) {
             if (handlers != null && handlers.size() > 0) {
                 handlers.forEach(EventBusListener::listen);
             }
             ebsub.start();
+            started = true;
             LOGGER.info("EventBusListener is running!");
         }else{
             LOGGER.warn("EventBusListener has already closed , you can not listen any event from EventBus!");
         }
-        started = true;
     }
     @PreDestroy
     public void stop() {
