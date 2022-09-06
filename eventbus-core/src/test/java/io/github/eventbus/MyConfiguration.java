@@ -53,7 +53,7 @@ public class MyConfiguration {
     public PubRouter learningPubRouter(){
         return new BasePubRouter() {
             private List<String> eventToRemote = Arrays.asList("learning.articleCreated");
-            private List<String> eventToALl = Arrays.asList("learning.articleRead");
+            private List<String> eventToALl = Arrays.asList("learning.articleRead","some.action");
             @Override
             public String[] route(String eventName) {
                 return eventToALl.contains(eventName) ? all :
@@ -73,6 +73,7 @@ public class MyConfiguration {
             }
         };
     }
+    @Bean
     public SubFilter subFilter(){
         return new SubFilter(){
             private List<String> acceptedEvent = Arrays.asList("some.action", "account.add");

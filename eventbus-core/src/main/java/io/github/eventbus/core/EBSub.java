@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 /**
  * 事件总线-订阅/消费
@@ -27,13 +28,14 @@ import java.util.concurrent.TimeUnit;
 public class EBSub {
     private Logger logger = LoggerFactory.getLogger(EBSub.class);
     private EventSource.EventConsumer doNothingHandler = (sourceTerminal, eventName, message) -> {
-        System.out.println("DO NOTHING--->" + eventName);
         if(logger.isDebugEnabled()){
-            logger.debug("doNothingHandler consumed event ? from ?", eventName, sourceTerminal);
+            logger.debug("EBSub.doNothingHandler consumed event ? from ?", eventName, sourceTerminal);
         }
     };
     private Collection<EventSource> sources;
     private Map<String, EventSource.EventConsumer> consumerMap;
+    //封装对consumerMap的操作
+    private Function<String, EventSource.EventConsumer> consumerGetter = (eventName) -> consumerMap.get(eventName);
     private SubFilterChain subFilterChain;
 
     EBSub(Collection<EventSource> sources, SubFilterChain subFilterChain) {
@@ -50,7 +52,7 @@ public class EBSub {
     void start() throws EventbusException{
         for (EventSource eventSource : sources) {
             if (eventSource instanceof AutoConsumeEventSource) {
-                ((AutoConsumeEventSource) eventSource).startConsume(consumerMap);
+                ((AutoConsumeEventSource) eventSource).startConsume(consumerGetter);
             } else if (eventSource instanceof ManualConsumeEventSource) {
                 startConsume((ManualConsumeEventSource) eventSource);
             } else {
@@ -61,7 +63,7 @@ public class EBSub {
     private void startConsume(ManualConsumeEventSource manualConsumeEventSource){
         MixedActionGenerator.loadAction(manualConsumeEventSource.getName(),manualConsumeEventSource.getConsumeInterval(),TimeUnit.MILLISECONDS,()->{
             try {
-                int consumed = manualConsumeEventSource.consume(consumerMap);
+                int consumed = manualConsumeEventSource.consume(consumerGetter);
                 // 如果没消费到消息则暂停x毫秒
                 if (manualConsumeEventSource.gePauseIfNotConsumed() > 0 && consumed == 0) {
                     Thread.sleep(manualConsumeEventSource.gePauseIfNotConsumed());
@@ -93,7 +95,7 @@ public class EBSub {
     //当设置了uniqueEventHandler后,consumerMap将被忽略,所有事件都由uniqueEventConsumer处理
     void setUniqueEventHandler(EventBusListener.EventHandler uniqueEventHandler){
         EventSource.EventConsumer uniqueEventConsumer = handlerConvertToConsumer(uniqueEventHandler);
-        this.consumerMap = new HashMap<String, EventSource.EventConsumer>() {
+        this.consumerMap = new HashMap<>() {
             @Override
             public EventSource.EventConsumer get(Object key) {
                 return uniqueEventConsumer;
@@ -109,7 +111,7 @@ public class EBSub {
         return (sourceTerminal, eventName, message) -> {
             if (subFilterChain.doFilter(eventName)) {
                 eventHandler.handle(sourceTerminal, eventName, message);
-            }else{
+            } else {
                 if(logger.isDebugEnabled()){
                     logger.debug("EBSub.EventConsumer has filtered the event ? from ?", eventName, sourceTerminal);
                 }

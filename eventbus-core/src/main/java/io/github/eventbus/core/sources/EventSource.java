@@ -3,7 +3,7 @@ package io.github.eventbus.core.sources;
 import io.github.eventbus.core.terminal.Terminal;
 import io.github.eventbus.exception.EventbusException;
 
-import java.util.Map;
+import java.util.function.Function;
 
 /**
  * @author ALi
@@ -28,11 +28,11 @@ public interface EventSource {
 
     /**
      * 事件处理,调用者应处理此方法可能抛出的异常
-     * @param consumers
+     * @param consumerGetter
      * @return
      * @throws EventbusException
      */
-    int consume(Map<String, EventConsumer> consumers) throws EventbusException;
+    int consume(Function<String, EventConsumer> consumerGetter) throws EventbusException;
 
     interface EventConsumer {
         void accept(Terminal sourceTerminal, String eventName, Object message);

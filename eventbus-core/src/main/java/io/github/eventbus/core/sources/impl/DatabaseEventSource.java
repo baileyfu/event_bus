@@ -1,11 +1,10 @@
 package io.github.eventbus.core.sources.impl;
 
-import io.github.eventbus.core.sources.AbstractEventSource;
 import io.github.eventbus.core.sources.Event;
 import io.github.eventbus.core.sources.ManualConsumeEventSource;
 import io.github.eventbus.exception.EventbusException;
 
-import java.util.Map;
+import java.util.function.Function;
 
 /**
  * @author ALi
@@ -24,7 +23,7 @@ public class DatabaseEventSource extends ManualConsumeEventSource {
     }
 
     @Override
-    public int consume(Map<String, EventConsumer> consumers) throws EventbusException {
+    public int consume(Function<String, EventConsumer> consumerGetter) throws EventbusException {
         return 0;
     }
 }

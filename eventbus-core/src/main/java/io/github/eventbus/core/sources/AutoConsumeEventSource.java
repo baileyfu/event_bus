@@ -3,6 +3,7 @@ package io.github.eventbus.core.sources;
 import io.github.eventbus.exception.EventbusException;
 
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * 由具体依赖的消息队列拉取
@@ -12,22 +13,21 @@ import java.util.Map;
  * @description
  */
 public abstract class AutoConsumeEventSource extends AbstractEventSource{
-    private Map<String, EventConsumer> consumers;
     public AutoConsumeEventSource(String name) {
         super(name);
     }
 
     @Override
-    public int consume(Map<String, EventConsumer> consumers) throws EventbusException {
+    public int consume(Function<String, EventConsumer> consumerGetter) throws EventbusException {
         //do nothing,the startConsume() do the job
         return 0;
     }
 
     /**
      * 启动消费,需对事件消费的异常进行处理以防止中断消费线程
-     * @param consumers
+     * @param consumerGetter
      */
-    public abstract void startConsume(Map<String, EventSource.EventConsumer> consumers);
+    public abstract void startConsume(Function<String, EventConsumer> consumerGetter);
 
     /**
      * 停止消费

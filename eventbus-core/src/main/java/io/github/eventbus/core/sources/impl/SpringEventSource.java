@@ -13,6 +13,7 @@ import org.springframework.context.PayloadApplicationEvent;
 import org.springframework.context.support.AbstractApplicationContext;
 
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * 事件可能丢失,不可重复消费
@@ -32,7 +33,7 @@ public class SpringEventSource extends AutoConsumeEventSource implements Applica
     }
 
     @Override
-    public void startConsume(Map<String, EventSource.EventConsumer> consumers) {
+    public void startConsume(Function<String, EventConsumer> consumerGetter) {
         applicationContext.addApplicationListener(new ApplicationListener<PayloadApplicationEvent>(){
             @Override
             public void onApplicationEvent(PayloadApplicationEvent applicationEvent) {
@@ -41,14 +42,12 @@ public class SpringEventSource extends AutoConsumeEventSource implements Applica
                     if (payload == null || !Event.class.isAssignableFrom(payload.getClass())) {
                         return;
                     }
-                    if (consumers != null) {
-                        Event event = (Event) applicationEvent.getPayload();
-                        try{
-                            EventSource.EventConsumer eventConsumer = consumers.get(event.getName());
-                            eventConsumer.accept(event.getSourceTerminal(), event.getName(), event.getMessage());
-                        } catch (Exception e) {
-                            logger.error("SpringEventSource consume event '" + event.getName() + "' error!", e);
-                        }
+                    Event event = (Event) applicationEvent.getPayload();
+                    try {
+                        EventSource.EventConsumer eventConsumer = consumerGetter.apply(event.getName());
+                        eventConsumer.accept(event.getSourceTerminal(), event.getName(), event.getMessage());
+                    } catch (Exception e) {
+                        logger.error("SpringEventSource consume event '" + event.getName() + "' error!", e);
                     }
                 }
             }

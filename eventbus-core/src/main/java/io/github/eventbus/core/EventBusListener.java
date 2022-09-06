@@ -9,7 +9,6 @@ import org.springframework.util.Assert;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.util.Collection;
-import java.util.List;
 
 /**
  * @author ALi
@@ -19,6 +18,7 @@ import java.util.List;
  */
 public class EventBusListener {
     private static Logger LOGGER = LoggerFactory.getLogger(EventBusListener.class);
+    private static EventBusListener INSTANCE;
 
     private EBSub ebsub;
     Collection<EventHandler> handlers;
@@ -28,18 +28,13 @@ public class EventBusListener {
         this.ebsub = ebsub;
         this.handlers = handlers;
         this.opening = opening;
+        INSTANCE = this;
     }
     @PostConstruct
     public void start() throws EventbusException {
         if (opening) {
             if (handlers != null && handlers.size() > 0) {
-                for (EventHandler handler : handlers) {
-                    Assert.hasLength(handler.targetEventName(), "EventHandler's targetEventName can not be empty!");
-                    ebsub.listen(handler.targetEventName(), handler);
-                    if (UniqueEventHandler.class.isAssignableFrom(handler.getClass())) {
-                        ebsub.setUniqueEventHandler(handler);
-                    }
-                }
+                handlers.forEach(EventBusListener::listen);
             }
             ebsub.start();
             LOGGER.info("EventBusListener is running!");
@@ -56,6 +51,15 @@ public class EventBusListener {
             LOGGER.info("EventBusListener is stopped!");
         }
     }
+
+    public static void listen(EventHandler handler) {
+        Assert.hasLength(handler.targetEventName(), "EventHandler's targetEventName can not be empty!");
+        INSTANCE.ebsub.listen(handler.targetEventName(), handler);
+        if (UniqueEventHandler.class.isAssignableFrom(handler.getClass())) {
+            INSTANCE.ebsub.setUniqueEventHandler(handler);
+        }
+    }
+
     /**
      * 订阅事件的处理器
      */

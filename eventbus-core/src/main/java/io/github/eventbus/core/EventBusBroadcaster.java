@@ -19,10 +19,10 @@ public class EventBusBroadcaster {
     EventBusBroadcaster(EBPub ebpub, boolean opening) {
         this.ebpub = ebpub;
         this.opening = opening;
-        INSTANCE = this;
         if(!this.opening){
             LOGGER.warn("EventBusBroadcaster has already closed , you can not broadcast any event to EventBus!");
         }
+        INSTANCE = this;
     }
 
     public static boolean broadcast(String eventName) {
