@@ -1,0 +1,61 @@
+subprojects {
+    group 'io.github.eventbus'
+    version '1.0.0-SNAPSHOT'
+
+    apply plugin: 'java'
+    apply plugin: 'java-library'
+    apply plugin: 'maven-publish'
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+
+    repositories {
+        mavenLocal()
+        maven{ url 'https://maven.aliyun.com/nexus/content/groups/public/'}
+        maven{
+            url "${repo_url_github}"
+            credentials {
+                username "${repo_user_github}"
+                password "${repo_pass_github}"
+            }
+        }
+        mavenCentral()
+    }
+
+    dependencies {
+        implementation platform('org.springframework.boot:spring-boot-dependencies:2.5.3')
+        implementation "org.springframework.boot:spring-boot-starter"
+        testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+        testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+    }
+
+    // 打包sourcesJar任务
+    task sourcesJar(type: Jar, dependsOn: classes) {
+        classifier = 'sources'
+        from sourceSets.main.allSource
+    }
+    publishing{
+        publications{
+            mavenJava(MavenPublication){
+                groupId project.group
+                artifactId project.name
+                version project.version
+                from components.java
+                artifact sourcesJar
+            }
+        }
+        repositories {
+            maven {
+                url "${repo_url_github}"
+                credentials {
+                    username "${repo_user_github}"
+                    password "${repo_pass_github}"
+                }
+            }
+        }
+    }
+    publish.dependsOn(build)
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+}
