@@ -7,12 +7,14 @@ package io.github.eventbus.exception;
  * @description
  */
 public class EventbusException extends Exception{
+    private static final String HEAD = "[Eventbus]-";
     public EventbusException(){
+        super(HEAD + "eventbus appear error !");
     }
     public EventbusException(String message){
-        super(message);
+        super(HEAD+message);
     }
     public EventbusException(String message, Throwable cause){
-        super(message,cause);
+        super(HEAD+message,cause);
     }
 }

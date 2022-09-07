@@ -1,0 +1,65 @@
+﻿package io.github.eventbus.core.sources.impl;
+
+import io.github.eventbus.core.sources.Event;
+import io.github.eventbus.core.sources.ManualConsumeEventSource;
+import io.github.eventbus.exception.EventbusException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Map;
+import java.util.function.Function;
+
+/**
+ * @author ALi
+ * @version 1.0
+ * @date 2022-09-07 17:42
+ * @description
+ */
+public abstract class AbstractDatabaseEventSource extends ManualConsumeEventSource {
+    protected Logger logger = LoggerFactory.getLogger(this.getClass());
+
+    public AbstractDatabaseEventSource(String name) {
+        super(name);
+    }
+
+    @Override
+    public int consume(Function<String, EventConsumer> consumerGetter) throws EventbusException {
+        int consumedCount = 0;
+        try{
+            Map<Long, Event> waitingEvents = fetchAndSetUnconsumed();
+            if (waitingEvents != null && waitingEvents.size() > 0) {
+                for (Long eventId : waitingEvents.keySet()) {
+                    Event event = waitingEvents.get(eventId);
+                    EventConsumer eventConsumer = consumerGetter.apply(event.getName());
+                    try {
+                        eventConsumer.accept(event.getSourceTerminal(), event.getName(), event.getMessage());
+                        consumedCount++;
+                    } catch (Exception e) {
+                        logger.error("DatabaseEventSource consume error with '" + event + "'!", e);
+                        //单个事件消费失败不影响其他事件的消费
+                        rollback(eventId);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            throw new EventbusException("DatabaseEventSource.consume() error !", e);
+        }
+        return consumedCount;
+    }
+
+    /**
+     * 将事件状态重制为unconsumed
+     * @param eventId
+     */
+    protected void rollback(long eventId) {
+        try {
+            setUnconsumed(eventId);
+        } catch (Exception e) {
+            logger.error("DatabaseEventSource rollback error with '" + eventId + "'!", e);
+            //TODO 写入指定日志让人工回滚
+        }
+    }
+
+    abstract protected Map<Long,Event> fetchAndSetUnconsumed();
+    abstract protected void setUnconsumed(long eventId) throws Exception;
+}

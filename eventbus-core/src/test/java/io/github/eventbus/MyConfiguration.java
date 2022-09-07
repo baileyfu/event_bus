@@ -2,7 +2,7 @@ package io.github.eventbus;
 
 import io.github.eventbus.core.EventBusListener;
 import io.github.eventbus.core.sources.filter.SubFilter;
-import io.github.eventbus.core.sources.impl.DatabaseEventSource;
+import io.github.eventbus.core.sources.impl.DatabaseQueueEventSource;
 import io.github.eventbus.core.sources.impl.SpringEventSource;
 import io.github.eventbus.core.sources.route.PubRouter;
 import io.github.eventbus.core.terminal.Terminal;
@@ -25,8 +25,8 @@ public class MyConfiguration {
         return new SpringEventSource("MemEventSource");
     }
     @Bean
-    public DatabaseEventSource databaseEventSource(){
-        return new DatabaseEventSource("DbEventSource");
+    public DatabaseQueueEventSource databaseEventSource(){
+        return new DatabaseQueueEventSource("DbEventSource",null);
     }
     @Bean
     public EventBusListener.EventHandler accountAddHandler(){
