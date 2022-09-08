@@ -1,4 +1,4 @@
-package io.github.eventbus.core.sources.impl.database.mybatis.model;
+package io.github.eventbus.core.sources.impl.database.model;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 

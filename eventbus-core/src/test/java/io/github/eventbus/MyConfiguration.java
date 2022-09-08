@@ -4,11 +4,10 @@ import io.github.eventbus.core.EventBusListener;
 import io.github.eventbus.core.sources.filter.SubFilter;
 import io.github.eventbus.core.sources.impl.DatabaseQueueEventSource;
 import io.github.eventbus.core.sources.impl.SpringEventSource;
-import io.github.eventbus.core.sources.impl.database.mybatis.dao.QueuedEventMapper;
-import io.github.eventbus.core.sources.impl.database.mybatis.model.QueuedEvent;
+import io.github.eventbus.core.sources.impl.database.dao.mybatis.QueuedEventAnnotationMapper;
+import io.github.eventbus.core.sources.impl.database.model.QueuedEvent;
 import io.github.eventbus.core.sources.route.PubRouter;
 import io.github.eventbus.core.terminal.Terminal;
-import io.github.eventbus.util.IDGenerator;
 import org.apache.commons.lang3.RandomUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,7 +30,7 @@ public class MyConfiguration {
     }
     @Bean
     public DatabaseQueueEventSource databaseEventSource(){
-        return new DatabaseQueueEventSource("DbEventSource",new QueuedEventMapper(){
+        return new DatabaseQueueEventSource("DbEventSource",new QueuedEventAnnotationMapper(){
             List<QueuedEvent> list = new ArrayList<>();
             @Override
             public int insert(QueuedEvent queuedEvent) {

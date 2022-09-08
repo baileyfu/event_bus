@@ -1,7 +1,7 @@
 package io.github.eventbus.core.sources.impl;
 
 import io.github.eventbus.core.sources.Event;
-import io.github.eventbus.core.sources.impl.database.mybatis.dao.TopicalEventMapper;
+import io.github.eventbus.core.sources.impl.database.dao.TopicalEventDAO;
 import org.apache.http.util.Asserts;
 
 import java.util.Map;
@@ -16,12 +16,12 @@ import java.util.Map;
  * @description
  */
 public class DatabaseTopicEventSource extends AbstractDatabaseEventSource {
-    private TopicalEventMapper topicalEventMapper;
+    private TopicalEventDAO topicalEventDAO;
 
-    public DatabaseTopicEventSource(String name, TopicalEventMapper topicalEventMapper) {
+    public DatabaseTopicEventSource(String name, TopicalEventDAO topicalEventDAO) {
         super(name);
-        Asserts.notNull(topicalEventMapper, "TopicalEventMapper");
-        this.topicalEventMapper = topicalEventMapper;
+        Asserts.notNull(topicalEventDAO, "topicalEventDAO");
+        this.topicalEventDAO = topicalEventDAO;
     }
 
     @Override

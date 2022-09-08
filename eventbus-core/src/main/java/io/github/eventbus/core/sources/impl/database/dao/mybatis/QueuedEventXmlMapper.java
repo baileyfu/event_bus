@@ -1,6 +1,10 @@
-package io.github.eventbus.core.sources.impl.database.mybatis.dao;
+package io.github.eventbus.core.sources.impl.database.dao.mybatis;
 
-import io.github.eventbus.core.sources.impl.database.mybatis.model.QueuedEvent;
+
+import io.github.eventbus.core.sources.impl.database.dao.QueuedEventDAO;
+import io.github.eventbus.core.sources.impl.database.model.QueuedEvent;
+
+import java.util.List;
 
 /**
  * 自定义mapper.xml文件实现SQL功能<br/>
@@ -10,12 +14,15 @@ import io.github.eventbus.core.sources.impl.database.mybatis.model.QueuedEvent;
  * @date 2022-09-07 16:44
  * @description
  */
-public interface QueuedEventXmlMapper extends QueuedEventMapper{
+public interface QueuedEventXmlMapper extends QueuedEventDAO {
     /**
      * mapper.xml需要实现SQL:insert QueuedEvent(id,serialId,name,message,messageType,sourceTerminal,state,createTime)<br/>
      * @param queuedEvent
      * @return
      */
-    @Override
     int insert(QueuedEvent queuedEvent);
+
+    List<QueuedEvent> selectUnconsumedThenUpdateConsumed(int state, int limit);
+
+    int updateStateToUnconsumed(long id);
 }

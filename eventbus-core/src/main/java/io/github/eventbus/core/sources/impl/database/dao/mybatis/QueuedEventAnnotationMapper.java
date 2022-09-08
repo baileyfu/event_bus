@@ -1,7 +1,11 @@
-package io.github.eventbus.core.sources.impl.database.mybatis.dao;
+package io.github.eventbus.core.sources.impl.database.dao.mybatis;
 
-import io.github.eventbus.core.sources.impl.database.mybatis.model.QueuedEvent;
-import org.apache.ibatis.annotations.*;
+import io.github.eventbus.core.sources.impl.database.dao.QueuedEventDAO;
+import io.github.eventbus.core.sources.impl.database.model.QueuedEvent;
+import org.apache.ibatis.annotations.Insert;
+import org.apache.ibatis.annotations.Options;
+import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
 
@@ -12,7 +16,7 @@ import java.util.List;
  * @date 2022-09-07 17:07
  * @description
  */
-public interface QueuedEventMapper {
+public interface QueuedEventAnnotationMapper extends QueuedEventDAO {
     @Insert("insert into eventbus_queued_event(serial_id,name,message,message_type,source_terminal,state,create_time) values(#{serialId},#{name},#{message},#{messageType},#{sourceTerminal},#{state},now())")
     @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
     int insert(QueuedEvent queuedEvent);

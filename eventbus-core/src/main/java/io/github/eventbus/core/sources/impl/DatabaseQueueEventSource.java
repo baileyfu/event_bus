@@ -1,8 +1,8 @@
 package io.github.eventbus.core.sources.impl;
 
 import io.github.eventbus.core.sources.Event;
-import io.github.eventbus.core.sources.impl.database.mybatis.dao.QueuedEventMapper;
-import io.github.eventbus.core.sources.impl.database.mybatis.model.QueuedEvent;
+import io.github.eventbus.core.sources.impl.database.dao.QueuedEventDAO;
+import io.github.eventbus.core.sources.impl.database.model.QueuedEvent;
 import io.github.eventbus.exception.EventbusException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.util.Asserts;
@@ -18,11 +18,11 @@ import java.util.*;
  * @description
  */
 public class DatabaseQueueEventSource extends AbstractDatabaseEventSource {
-    protected QueuedEventMapper queuedEventMapper;
-    public DatabaseQueueEventSource(String name, QueuedEventMapper queuedEventMapper) {
+    protected QueuedEventDAO queuedEventDAO;
+    public DatabaseQueueEventSource(String name, QueuedEventDAO queuedEventDAO) {
         super(name);
-        Asserts.notNull(queuedEventMapper, "QueuedEventMapper");
-        this.queuedEventMapper = queuedEventMapper;
+        Asserts.notNull(queuedEventDAO, "queuedEventDAO");
+        this.queuedEventDAO = queuedEventDAO;
     }
 
     @Override
@@ -56,13 +56,13 @@ public class DatabaseQueueEventSource extends AbstractDatabaseEventSource {
 
     @Override
     protected void save(Event event) throws Exception {
-        queuedEventMapper.insert((QueuedEvent) eventSerializer.serialize(event));
+        queuedEventDAO.insert((QueuedEvent) eventSerializer.serialize(event));
     }
 
     @Override
     protected Map<Long, Event> fetchAndSetUnconsumed() throws Exception {
         Map<Long, Event> unconsumedMap = null;
-        List<QueuedEvent> unconsumedList = queuedEventMapper.selectUnconsumedThenUpdateConsumed(QueuedEvent.STATE_UNCONSUMED, limit);
+        List<QueuedEvent> unconsumedList = queuedEventDAO.selectUnconsumedThenUpdateConsumed(QueuedEvent.STATE_UNCONSUMED, limit);
         if (unconsumedList != null && unconsumedList.size() > 0) {
             List<Long> queuedEventIdList = new ArrayList<>();
             unconsumedMap = unconsumedList.parallelStream().reduce(new HashMap<>(), (map, queuedEvent) -> {
@@ -80,6 +80,6 @@ public class DatabaseQueueEventSource extends AbstractDatabaseEventSource {
 
     @Override
     protected void setUnconsumed(long eventId) throws Exception {
-        queuedEventMapper.updateStateToUnconsumed(eventId);
+        queuedEventDAO.updateStateToUnconsumed(eventId);
     }
 }
