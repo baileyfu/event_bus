@@ -1,8 +1,13 @@
-﻿package io.github.eventbus.core.sources.impl;
+package io.github.eventbus.core.sources.impl;
 
+import com.alibaba.fastjson.JSON;
+import io.github.eventbus.constants.EventSourceConfigConst;
+import io.github.eventbus.constants.JSONConfig;
 import io.github.eventbus.core.sources.Event;
 import io.github.eventbus.core.sources.ManualConsumeEventSource;
+import io.github.eventbus.core.terminal.Terminal;
 import io.github.eventbus.exception.EventbusException;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,9 +22,19 @@ import java.util.function.Function;
  */
 public abstract class AbstractDatabaseEventSource extends ManualConsumeEventSource {
     protected Logger logger = LoggerFactory.getLogger(this.getClass());
-
+    protected int limit;
     public AbstractDatabaseEventSource(String name) {
         super(name);
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        super.afterPropertiesSet();
+        limit = Integer.valueOf(environment.getProperty(EventSourceConfigConst.DATABASE_EVENT_SOURCE_LIMIT, "100"));
+        if (limit < 1) {
+            limit = 1;
+            logger.warn(EventSourceConfigConst.DATABASE_EVENT_SOURCE_LIMIT + " value is " + limit + " , reset to 1.");
+        }
     }
 
     @Override
@@ -32,7 +47,7 @@ public abstract class AbstractDatabaseEventSource extends ManualConsumeEventSour
                     Event event = waitingEvents.get(eventId);
                     EventConsumer eventConsumer = consumerGetter.apply(event.getName());
                     try {
-                        eventConsumer.accept(event.getSourceTerminal(), event.getName(), event.getMessage());
+                        eventConsumer.accept(this.getName(), event.getSourceTerminal(), event.getName(), event.getMessage());
                         consumedCount++;
                     } catch (Exception e) {
                         logger.error("DatabaseEventSource consume error with '" + event + "'!", e);
@@ -60,6 +75,23 @@ public abstract class AbstractDatabaseEventSource extends ManualConsumeEventSour
         }
     }
 
-    abstract protected Map<Long,Event> fetchAndSetUnconsumed();
+    protected String serializeMessage(Object message) {
+        return message == null ? StringUtils.EMPTY : JSON.toJSONString(message, JSONConfig.SERIALIZER_FEATURE_ARRAY);
+    }
+    protected Object deserializeMessage(String jsonMessage,String messageTypeValue) throws EventbusException{
+        try{
+            return StringUtils.isEmpty(jsonMessage) ? null : JSON.parseObject(jsonMessage,Class.forName(messageTypeValue), JSONConfig.FEATURE_ARRAY);
+        }catch(Exception e){
+            throw new EventbusException("AbstractDatabaseEventSource.deserializeMessage() error!", e);
+        }
+    }
+    protected String serializeTerminal(Terminal sourceTerminal) {
+        return sourceTerminal == null ? StringUtils.EMPTY : JSON.toJSONString(sourceTerminal);
+    }
+    protected Terminal deserializeTerminal(String jsonSourceTerminal) {
+        return StringUtils.isEmpty(jsonSourceTerminal) ? null : JSON.parseObject(jsonSourceTerminal, Terminal.class);
+    }
+
+    abstract protected Map<Long,Event> fetchAndSetUnconsumed() throws Exception;
     abstract protected void setUnconsumed(long eventId) throws Exception;
 }

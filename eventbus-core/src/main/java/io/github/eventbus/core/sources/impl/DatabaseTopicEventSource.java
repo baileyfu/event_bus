@@ -1,4 +1,4 @@
-﻿package io.github.eventbus.core.sources.impl;
+package io.github.eventbus.core.sources.impl;
 
 import io.github.eventbus.core.sources.Event;
 import io.github.eventbus.core.sources.impl.database.mybatis.dao.TopicalEventMapper;

@@ -11,7 +11,7 @@ import org.springframework.util.Assert;
  * @date 2022-09-05 09:36
  * @description
  */
-public abstract class ManualConsumeEventSource extends AbstractEventSource implements InitializingBean {
+public abstract class ManualConsumeEventSource extends AbstractEventSource{
     private long consumeInterval;
     private long pauseIfNotConsumed;
     public ManualConsumeEventSource(String name) {
@@ -20,6 +20,7 @@ public abstract class ManualConsumeEventSource extends AbstractEventSource imple
 
     @Override
     public void afterPropertiesSet() throws Exception {
+        super.afterPropertiesSet();
         if (consumeInterval == 0l) {
             setConsumeInterval(Long.valueOf(environment.getProperty(EventSourceConfigConst.CONSUME_INTERVAL, "100")));
         }

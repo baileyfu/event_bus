@@ -9,4 +9,6 @@ package io.github.eventbus.constants;
 public class EventSourceConfigConst {
     public static final String CONSUME_INTERVAL = "eventbus.source.consumeInterval";
     public static final String PAUSE_IF_NOT_CONSUMED = "eventbus.source.pauseIfNotConsumed";
+
+    public static final String DATABASE_EVENT_SOURCE_LIMIT = "eventbus.source.database.limit";
 }

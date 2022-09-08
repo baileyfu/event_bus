@@ -42,7 +42,7 @@ public class SpringEventSource extends AutoConsumeEventSource implements Applica
                 Event event = (Event) applicationEvent.getPayload();
                 try {
                     EventConsumer eventConsumer = consumerGetter.apply(event.getName());
-                    eventConsumer.accept(event.getSourceTerminal(), event.getName(), event.getMessage());
+                    eventConsumer.accept(this.getName(), event.getSourceTerminal(), event.getName(), event.getMessage());
                 } catch (Exception e) {
                     logger.error("SpringEventSource consume event '" + event.getName() + "' error!", e);
                 }

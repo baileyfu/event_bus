@@ -26,9 +26,9 @@ import java.util.function.Function;
  */
 public class EBSub {
     private Logger logger = LoggerFactory.getLogger(EBSub.class);
-    private EventSource.EventConsumer doNothingHandler = (sourceTerminal, eventName, message) -> {
+    private EventSource.EventConsumer doNothingHandler = (eventSourceName, sourceTerminal, eventName, message) -> {
         if(logger.isDebugEnabled()){
-            logger.debug("EBSub.doNothingHandler consumed event ? from ?", eventName, sourceTerminal);
+            logger.debug("EBSub.doNothingHandler for '" + eventSourceName + "' consumed event '" + eventName + "' from '"+sourceTerminal+"'");
         }
     };
     private Collection<EventSource> sources;
@@ -98,12 +98,15 @@ public class EBSub {
         consumerMap.put(eventName, handlerConvertToConsumer(eventHandler));
     }
     private EventSource.EventConsumer handlerConvertToConsumer(EventBusListener.EventHandler eventHandler){
-        return (sourceTerminal, eventName, message) -> {
+        return (eventSourceName, sourceTerminal, eventName, message) -> {
             if (subFilterChain.doFilter(eventName)) {
                 eventHandler.handle(sourceTerminal, eventName, message);
+                if(logger.isDebugEnabled()){
+                    logger.debug(">>>+++EBSub.EventConsumer for '" + eventSourceName + "' has consumed the event '"+eventName+"' from '"+sourceTerminal+"'");
+                }
             } else {
                 if(logger.isDebugEnabled()){
-                    logger.debug("EBSub.EventConsumer has filtered the event ? from ?", eventName, sourceTerminal);
+                    logger.debug(">>>---EBSub.EventConsumer for '" + eventSourceName + "' has filtered the event '"+eventName+"' from '"+sourceTerminal+"'");
                 }
             }
         };

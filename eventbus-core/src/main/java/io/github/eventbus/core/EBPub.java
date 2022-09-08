@@ -8,7 +8,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 事件总线-发布器<br/>
@@ -45,10 +48,17 @@ public class EBPub {
         Assert.hasLength(eventName, "eventName can not be empty!");
         String[] targetSourceNameArray = pubRouterChain.route(eventName);
         if ((targetSourceNameArray != null && targetSourceNameArray.length > 0)) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("+++>>>EBPub.emit event '"+eventName+"' with message '"+message+"' to '"+Arrays.toString(targetSourceNameArray)+"'");
+            }
             doEmit(eventName, message, targetSourceNameArray == DefaultPubRouter.PUB_TO_ALL ? sourceKeys : targetSourceNameArray);
+        }else{
+            if (logger.isDebugEnabled()) {
+                logger.debug("--->>>EBPub.emit no EventSource matched for event '"+eventName+"' with message '"+message+"'");
+            }
         }
     }
-    private void doEmit(String eventName, Object message,String...sourceNameArray) throws EventbusException {
+    private void doEmit(String eventName, Object message, String...sourceNameArray) throws EventbusException {
         for (String sourceName : sourceNameArray) {
             EventSource eventSource = sources.get(sourceName);
             if (eventSource != null) {

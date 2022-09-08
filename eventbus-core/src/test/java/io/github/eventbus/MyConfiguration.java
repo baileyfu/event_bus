@@ -4,11 +4,16 @@ import io.github.eventbus.core.EventBusListener;
 import io.github.eventbus.core.sources.filter.SubFilter;
 import io.github.eventbus.core.sources.impl.DatabaseQueueEventSource;
 import io.github.eventbus.core.sources.impl.SpringEventSource;
+import io.github.eventbus.core.sources.impl.database.mybatis.dao.QueuedEventMapper;
+import io.github.eventbus.core.sources.impl.database.mybatis.model.QueuedEvent;
 import io.github.eventbus.core.sources.route.PubRouter;
 import io.github.eventbus.core.terminal.Terminal;
+import io.github.eventbus.util.IDGenerator;
+import org.apache.commons.lang3.RandomUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -26,7 +31,26 @@ public class MyConfiguration {
     }
     @Bean
     public DatabaseQueueEventSource databaseEventSource(){
-        return new DatabaseQueueEventSource("DbEventSource",null);
+        return new DatabaseQueueEventSource("DbEventSource",new QueuedEventMapper(){
+            List<QueuedEvent> list = new ArrayList<>();
+            @Override
+            public int insert(QueuedEvent queuedEvent) {
+                queuedEvent.setId(RandomUtils.nextLong());
+                list.add(queuedEvent);
+                return 1;
+            }
+            @Override
+            public List<QueuedEvent> selectUnconsumedThenUpdateConsumed(int state, int limit) {
+                List<QueuedEvent> list = this.list;
+                this.list = new ArrayList<>();
+                return list;
+            }
+            @Override
+            public int updateStateToUnconsumed(long id) {
+                System.out.println("try reset state to unconsumed with id :" + id);
+                return 1;
+            }
+        });
     }
     @Bean
     public EventBusListener.EventHandler accountAddHandler(){
@@ -45,8 +69,7 @@ public class MyConfiguration {
     @Bean
     public EventBusListener.UniqueEventHandler allEventHandler(){
         return (sourceTerminal, eventName, message) -> {
-            System.out.println(eventName+" be handled by UniqueEventHandler ,  message : " + message);
-            System.out.println(sourceTerminal);
+            System.out.println(eventName+" be handled by UniqueEventHandler ,  message : " + message+" , sourceTerminal : "+sourceTerminal);
         };
     }
     @Bean

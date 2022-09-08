@@ -2,6 +2,7 @@ package io.github.eventbus.core.terminal;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
+import java.io.Serializable;
 import java.net.URL;
 
 /**
@@ -10,7 +11,7 @@ import java.net.URL;
  * @date 2022-06-01 14:52
  * @description
  */
-public class Terminal {
+public class Terminal implements Serializable {
     private String name;
     private URL url;
 

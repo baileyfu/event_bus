@@ -35,7 +35,7 @@ public class EventBusBroadcaster {
                 INSTANCE.ebpub.emit(eventName,message);
                 return true;
             } catch (EventbusException e) {
-                LOGGER.error("BusBroadcaster.broadcast() error!", e);
+                LOGGER.error("BusBroadcaster.broadcast event " + eventName + " with '" + message + "' error!", e);
             }
         }
         return false;
