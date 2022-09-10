@@ -1,6 +1,7 @@
 package io.github.eventbus.core.sources.impl.database.dao.mybatis;
 
-import io.github.eventbus.core.sources.impl.database.mybatis.model.TopicalEvent;
+
+import io.github.eventbus.core.sources.impl.database.model.TopicalEvent;
 
 /**
  * @author ALi
