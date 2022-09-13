@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Options;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
+import org.apache.ibatis.mapping.StatementType;
 
 import java.util.List;
 
@@ -21,9 +22,8 @@ public interface QueuedEventAnnotationMapper extends QueuedEventDAO {
     @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
     int insert(QueuedEvent queuedEvent);
 
-    //TODO select and update
-    @Select("begin;select * from eventbus_queued_event where state=#{state} limit #{limit} for update;commit;")
-    @Options(useCache = false)
+    @Select("{CALL selectUnconsumedThenUpdateConsumed(#{limit,mode=IN,jdbcType=TINYINT})}")
+    @Options(useCache = false, statementType = StatementType.CALLABLE)
     List<QueuedEvent> selectUnconsumedThenUpdateConsumed(int state, int limit);
 
     @Update("update eventbus_queued_event set state=" + QueuedEvent.STATE_CONSUMED+" where id in" +
