@@ -1,6 +1,7 @@
 package io.github.eventbus.core.sources.impl;
 
 import io.github.ali.commons.beanutils.BeanCopierUtils;
+import io.github.ali.commons.variable.MixedActionGenerator;
 import io.github.eventbus.constants.EventSourceConfigConst;
 import io.github.eventbus.core.sources.Event;
 import io.github.eventbus.core.sources.impl.database.dao.TopicalEventDAO;
@@ -15,6 +16,7 @@ import io.github.eventbus.util.IDGenerator;
 import org.apache.http.util.Asserts;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 发布-订阅型(Topic)<br/>
@@ -66,6 +68,14 @@ public class DatabaseTopicEventSource extends AbstractDatabaseEventSource {
         Terminal terminal = TerminalFactory.create();
         currentTerminalId = clusterConsuming ? terminal.getName() : IDGenerator.generateTerminalId(terminal);
         registerTerminal();
+        //启动定时(1天)剔除失活节点
+        MixedActionGenerator.loadAction("DatabaseTopicEventSource.inactivateTerminal", 1, TimeUnit.DAYS, () -> {
+            try {
+                inactivateTerminal();
+            } catch (Exception e) {
+                logger.error("the action of DatabaseTopicEventSource.inactivateTerminal error!", e);
+            }
+        });
     }
 
     /**
@@ -82,6 +92,13 @@ public class DatabaseTopicEventSource extends AbstractDatabaseEventSource {
         } else {
             topicalEventTerminalDAO.updateLastActiveTime(currentTerminalId);
         }
+    }
+
+    /**
+     * 剔除不再活跃的节点,使其不再收到事件
+     */
+    private void inactivateTerminal() {
+        //TODO
     }
 
     public void setClusterConsuming(Boolean clusterConsuming) {
