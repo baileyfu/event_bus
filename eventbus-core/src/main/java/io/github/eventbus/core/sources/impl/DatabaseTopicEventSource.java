@@ -69,11 +69,12 @@ public class DatabaseTopicEventSource extends AbstractDatabaseEventSource {
         currentTerminalId = clusterConsuming ? terminal.getName() : IDGenerator.generateTerminalId(terminal);
         registerTerminal();
         //启动定时(1天)剔除失活节点
-        MixedActionGenerator.loadAction("DatabaseTopicEventSource.inactivateTerminal", 1, TimeUnit.DAYS, () -> {
+        String actionName = this + ".inactivateTerminal";
+        MixedActionGenerator.loadAction(actionName, 1, TimeUnit.DAYS, () -> {
             try {
                 inactivateTerminal();
             } catch (Exception e) {
-                logger.error("the action of DatabaseTopicEventSource.inactivateTerminal error!", e);
+                logger.error("the action of " + actionName + " error!", e);
             }
         });
     }
