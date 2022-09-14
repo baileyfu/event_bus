@@ -4,7 +4,7 @@ import io.github.eventbus.core.sources.Event;
 import io.github.eventbus.core.sources.impl.database.dao.QueuedEventDAO;
 import io.github.eventbus.core.sources.impl.database.model.QueuedEvent;
 import io.github.eventbus.exception.EventbusException;
-import org.apache.commons.lang3.StringUtils;
+import io.github.eventbus.util.BeanConverter;
 import org.apache.http.util.Asserts;
 
 import java.util.*;
@@ -31,15 +31,9 @@ public class DatabaseQueueEventSource extends AbstractDatabaseEventSource {
         this.eventSerializer = new Event.EventSerializer<QueuedEvent>() {
             @Override
             public QueuedEvent serialize(Event event) throws EventbusException {
-                QueuedEvent queuedEvent = new QueuedEvent();
-                queuedEvent.setSerialId(event.getSerialId());
-                queuedEvent.setName(event.getName());
-                queuedEvent.setState(QueuedEvent.STATE_UNCONSUMED);
+                QueuedEvent queuedEvent = BeanConverter.eventToQueuedEvent(event);
                 queuedEvent.setMessage(serializeMessage(event.getMessage()));
-                Class messageType = event.getMessageType();
-                queuedEvent.setMessageType(messageType == null ? StringUtils.EMPTY : messageType.getName());
                 queuedEvent.setSourceTerminal(serializeTerminal(event.getSourceTerminal()));
-                queuedEvent.setCreateTime(new Date());
                 return queuedEvent;
             }
 

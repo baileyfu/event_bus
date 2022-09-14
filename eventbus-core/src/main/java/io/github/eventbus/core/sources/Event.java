@@ -69,7 +69,7 @@ public class Event implements Serializable {
             return build(null);
         }
         public Event build(String serialId){
-            event.serialId = serialId == null ? IDGenerator.GenerateEventSerialId() : serialId;
+            event.serialId = serialId == null ? IDGenerator.generateEventSerialId() : serialId;
             Assert.hasLength(event.name,"eventName can not be empty!");
             return event;
         }
