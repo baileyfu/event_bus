@@ -1,7 +1,6 @@
 package io.github.eventbus.core.sources;
 
 import io.github.eventbus.constants.EventSourceConfigConst;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.Assert;
 
 /**
@@ -22,10 +21,10 @@ public abstract class ManualConsumeEventSource extends AbstractEventSource{
     public void afterPropertiesSet() throws Exception {
         super.afterPropertiesSet();
         if (consumeInterval == 0l) {
-            setConsumeInterval(Long.valueOf(environment.getProperty(EventSourceConfigConst.CONSUME_INTERVAL, "100")));
+            setConsumeInterval(Long.valueOf(environment.getProperty(EventSourceConfigConst.MANUAL_CONSUME_INTERVAL, "100")));
         }
         if (pauseIfNotConsumed == 0l) {
-            setPauseIfNotConsumed(Long.valueOf(environment.getProperty(EventSourceConfigConst.PAUSE_IF_NOT_CONSUMED, "1000")));
+            setPauseIfNotConsumed(Long.valueOf(environment.getProperty(EventSourceConfigConst.MANUAL_PAUSE_IF_NOT_CONSUMED, "1000")));
         }
     }
 

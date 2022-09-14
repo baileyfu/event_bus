@@ -80,7 +80,8 @@ public class EBSub {
                 if (eventSource instanceof AutoConsumeEventSource) {
                     ((AutoConsumeEventSource)eventSource).stopConsume();
                 } else if (eventSource instanceof ManualConsumeEventSource) {
-                    MixedActionGenerator.unloadAction(eventSource.getName(),true);
+                    //由ResourceReleaser来负责最终的释放
+                    MixedActionGenerator.unloadAction(eventSource.getName(),false);
                 }
             } catch (Exception e) {
                 logger.error("EBSub stop EventSource named '" + eventSource.getName() + "' error!", e);

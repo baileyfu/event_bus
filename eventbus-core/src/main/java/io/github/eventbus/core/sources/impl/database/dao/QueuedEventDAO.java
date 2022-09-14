@@ -12,9 +12,32 @@ import java.util.List;
  * @description
  */
 public interface QueuedEventDAO {
+    /**
+     * 插入事件
+     * @param queuedEvent
+     * @return
+     */
     int insert(QueuedEvent queuedEvent);
 
-    List<QueuedEvent> selectUnconsumedThenUpdateConsumed(int state, int limit);
+    /**
+     * 查询未消费事件并设置未已消费
+     * @param limit
+     * @return
+     */
+    List<QueuedEvent> selectUnconsumedThenUpdateConsumed(int limit);
 
+    /**
+     * 将指定事件ID设置为未消费状态
+     * @param id
+     * @return
+     */
     int updateStateToUnconsumed(long id);
+
+    /**
+     * 清除已消费事件<br/>
+     * 可自定义直接清除或转储
+     * @param cycleHours
+     * @return
+     */
+    int cleanConsumed(int cycleHours);
 }

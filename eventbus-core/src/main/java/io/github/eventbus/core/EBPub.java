@@ -30,7 +30,7 @@ public class EBPub {
 
     EBPub(Collection<EventSource> sources, PubRouterChain pubRouterChain) {
         Assert.noNullElements(sources, "the EBPub has no EventSource!");
-        this.sources = sources.stream().reduce(new HashMap<String, EventSource>(), (map, es) -> {
+        this.sources = sources.stream().reduce(new HashMap<>(), (map, es) -> {
             Assert.isTrue(!map.containsKey(es.getName()), "duplicated EventSource name : '" + es.getName() + "'!");
             map.put(es.getName(), es);
             return map;

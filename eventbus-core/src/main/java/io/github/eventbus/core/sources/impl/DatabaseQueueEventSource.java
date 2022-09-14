@@ -62,7 +62,7 @@ public class DatabaseQueueEventSource extends AbstractDatabaseEventSource {
     @Override
     protected Map<Long, Event> fetchAndSetUnconsumed() throws Exception {
         Map<Long, Event> unconsumedMap = null;
-        List<QueuedEvent> unconsumedList = queuedEventDAO.selectUnconsumedThenUpdateConsumed(QueuedEvent.STATE_UNCONSUMED, limit);
+        List<QueuedEvent> unconsumedList = queuedEventDAO.selectUnconsumedThenUpdateConsumed(limit);
         if (unconsumedList != null && unconsumedList.size() > 0) {
             List<Long> queuedEventIdList = new ArrayList<>();
             unconsumedMap = unconsumedList.parallelStream().reduce(new HashMap<>(), (map, queuedEvent) -> {
@@ -81,5 +81,10 @@ public class DatabaseQueueEventSource extends AbstractDatabaseEventSource {
     @Override
     protected void setUnconsumed(long eventId) throws Exception {
         queuedEventDAO.updateStateToUnconsumed(eventId);
+    }
+
+    @Override
+    protected void clean() throws Exception {
+        queuedEventDAO.cleanConsumed(cleanCycle);
     }
 }

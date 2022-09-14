@@ -53,4 +53,8 @@ public class EventbusConfiguration {
         boolean lsnOpen = environment.getProperty(EventbusConfigConst.LSN_OPEN,Boolean.class,false);
         return new EventBusListener(ebsub, handlerMap == null ? null : handlerMap.values(), open && lsnOpen);
     }
+    @Bean
+    public ResourceReleaser resourceReleaser(){
+        return new ResourceReleaser();
+    }
 }

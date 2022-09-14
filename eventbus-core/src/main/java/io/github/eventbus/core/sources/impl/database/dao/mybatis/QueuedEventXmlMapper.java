@@ -20,9 +20,12 @@ public interface QueuedEventXmlMapper extends QueuedEventDAO {
      * @param queuedEvent
      * @return
      */
+    @Override
     int insert(QueuedEvent queuedEvent);
-
-    List<QueuedEvent> selectUnconsumedThenUpdateConsumed(int state, int limit);
-
+    @Override
     int updateStateToUnconsumed(long id);
+    @Override
+    List<QueuedEvent> selectUnconsumedThenUpdateConsumed(int limit);
+    @Override
+    int cleanConsumed(int cycleHours);
 }

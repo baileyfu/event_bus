@@ -2,10 +2,7 @@ package io.github.eventbus.core.sources.impl.database.dao.mybatis;
 
 import io.github.eventbus.core.sources.impl.database.dao.QueuedEventDAO;
 import io.github.eventbus.core.sources.impl.database.model.QueuedEvent;
-import org.apache.ibatis.annotations.Insert;
-import org.apache.ibatis.annotations.Options;
-import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Update;
+import org.apache.ibatis.annotations.*;
 import org.apache.ibatis.mapping.StatementType;
 
 import java.util.List;
@@ -18,20 +15,24 @@ import java.util.List;
  * @description
  */
 public interface QueuedEventAnnotationMapper extends QueuedEventDAO {
-    @Insert("insert into eventbus_queued_event(serial_id,name,message,message_type,source_terminal,state,create_time) values(#{serialId},#{name},#{message},#{messageType},#{sourceTerminal},#{state},now())")
+    @Insert("insert into eventbus_queued_event(serial_id,name,message,message_type,source_terminal,state,create_time) values(#{serialId},#{name},#{message},#{messageType},#{sourceTerminal}," + QueuedEvent.STATE_UNCONSUMED + ",now())")
     @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
     int insert(QueuedEvent queuedEvent);
 
     @Select("{CALL selectUnconsumedThenUpdateConsumed(#{limit,mode=IN,jdbcType=TINYINT})}")
     @Options(useCache = false, statementType = StatementType.CALLABLE)
-    List<QueuedEvent> selectUnconsumedThenUpdateConsumed(int state, int limit);
+    List<QueuedEvent> selectUnconsumedThenUpdateConsumed(int limit);
 
-    @Update("update eventbus_queued_event set state=" + QueuedEvent.STATE_CONSUMED+" where id in" +
-            "<foreach collection='eventIdList' index='index' item='item' open='(' separator=',' close=')'>#{item}</foreach>")
-    @Options(useCache = false)
-    //int updateStateToConsumed(@Param("eventIdList")List<Long> eventIdList);
-
-    @Update("update eventbus_queued_event set state=" + QueuedEvent.STATE_UNCONSUMED+" where id in(#{id})")
+    @Update("update eventbus_queued_event set state = " + QueuedEvent.STATE_UNCONSUMED + " where id = #{id}")
     @Options(useCache = false)
     int updateStateToUnconsumed(long id);
+
+    /**
+     * 直接删除被消费时间超过x小时的事件
+     * @return
+     */
+    @Delete("delete from eventbus_queued_event where state = " + QueuedEvent.STATE_CONSUMED + " and DATE_ADD(create_time,INTERVAL ${cycleHours} HOUR) < now())")
+    @Options(useCache = false)
+    @Override
+    int cleanConsumed(int cycleHours);
 }

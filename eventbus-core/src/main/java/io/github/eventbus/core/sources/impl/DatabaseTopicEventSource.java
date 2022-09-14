@@ -37,4 +37,9 @@ public class DatabaseTopicEventSource extends AbstractDatabaseEventSource {
     protected void setUnconsumed(long eventId) throws Exception {
 
     }
+
+    @Override
+    protected void clean() throws Exception {
+
+    }
 }

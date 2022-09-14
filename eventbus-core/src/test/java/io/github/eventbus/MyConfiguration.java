@@ -39,7 +39,7 @@ public class MyConfiguration {
                 return 1;
             }
             @Override
-            public List<QueuedEvent> selectUnconsumedThenUpdateConsumed(int state, int limit) {
+            public List<QueuedEvent> selectUnconsumedThenUpdateConsumed(int limit) {
                 List<QueuedEvent> list = this.list;
                 this.list = new ArrayList<>();
                 return list;
@@ -48,6 +48,10 @@ public class MyConfiguration {
             public int updateStateToUnconsumed(long id) {
                 System.out.println("try reset state to unconsumed with id :" + id);
                 return 1;
+            }
+            @Override
+            public int cleanConsumed(int cycleHours) {
+                return 0;
             }
         });
     }
