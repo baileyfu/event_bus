@@ -1,5 +1,6 @@
 package io.github.eventbus.core.sources.impl;
 
+import io.github.eventbus.core.EBSub;
 import io.github.eventbus.core.sources.Event;
 import io.github.eventbus.core.sources.impl.database.dao.QueuedEventDAO;
 import io.github.eventbus.core.sources.impl.database.model.QueuedEvent;
@@ -10,14 +11,15 @@ import org.apache.http.util.Asserts;
 import java.util.*;
 
 /**
- * 队列型(Queue)<br/>
+ * 队列型(Queue)-事件只能被一个Terminal的一个节点消费一次<br/>
  * 确保事件被正常消费,消费失败可重复
  * @author ALi
  * @version 1.0
  * @date 2022-09-01 15:56
  * @description
  */
-public class DatabaseQueueEventSource extends AbstractDatabaseEventSource {
+public class DatabaseQueueEventSource extends AbstractDatabaseEventSource implements EBSub.ListenedEventChangingListener {
+    private List<String> listenedEvents;
     protected QueuedEventDAO queuedEventDAO;
     public DatabaseQueueEventSource(String name, QueuedEventDAO queuedEventDAO) {
         super(name);
@@ -55,8 +57,11 @@ public class DatabaseQueueEventSource extends AbstractDatabaseEventSource {
 
     @Override
     protected Map<Long, Event> fetchAndSetUnconsumed() throws Exception {
+        if (listenedEvents == null || listenedEvents.size() == 0) {
+            return null;
+        }
         Map<Long, Event> unconsumedMap = null;
-        List<QueuedEvent> unconsumedList = queuedEventDAO.selectUnconsumedThenUpdateConsumed(limit);
+        List<QueuedEvent> unconsumedList = queuedEventDAO.selectUnconsumedThenUpdateConsumed(listenedEvents, limit);
         if (unconsumedList != null && unconsumedList.size() > 0) {
             List<Long> queuedEventIdList = new ArrayList<>();
             unconsumedMap = unconsumedList.parallelStream().reduce(new HashMap<>(), (map, queuedEvent) -> {
@@ -80,5 +85,10 @@ public class DatabaseQueueEventSource extends AbstractDatabaseEventSource {
     @Override
     protected void clean() throws Exception {
         queuedEventDAO.cleanConsumed(cleanCycle);
+    }
+
+    @Override
+    public void update(List<String> listenedEvents) {
+        this.listenedEvents = listenedEvents;
     }
 }

@@ -10,9 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
@@ -32,7 +30,8 @@ public class EBSub {
         }
     };
     private Collection<EventSource> sources;
-    private Map<String, EventSource.EventConsumer> consumerMap;
+    private Collection<ListenedEventChangingListener> eventChangingListeners;
+    private final Map<String, EventSource.EventConsumer> consumerMap;
     //封装对consumerMap的操作
     private Function<String, EventSource.EventConsumer> consumerGetter;
     private SubFilterChain subFilterChain;
@@ -45,7 +44,14 @@ public class EBSub {
         this.subFilterChain = subFilterChain;
     }
     void start() throws EventbusException{
+        List<String> listenedEvents = new ArrayList<>(consumerMap.keySet());
         for (EventSource eventSource : sources) {
+            if (eventSource instanceof ListenedEventChangingListener) {
+                eventChangingListeners = eventChangingListeners == null ? new ArrayList<>() : eventChangingListeners;
+                ListenedEventChangingListener listenedEventChangingListener = (ListenedEventChangingListener) eventSource;
+                listenedEventChangingListener.update(listenedEvents);
+                eventChangingListeners.add(listenedEventChangingListener);
+            }
             if (eventSource instanceof AutoConsumeEventSource) {
                 ((AutoConsumeEventSource) eventSource).startConsume(consumerGetter);
             } else if (eventSource instanceof ManualConsumeEventSource) {
@@ -97,6 +103,10 @@ public class EBSub {
         Assert.hasLength(eventName, "'eventName' can not be empty.");
         Assert.notNull(eventHandler, "'eventHandler' can not be null.");
         consumerMap.put(eventName, handlerConvertToConsumer(eventHandler));
+        if (eventChangingListeners != null) {
+            List<String> listenedEvents = new ArrayList<>(consumerMap.keySet());
+            eventChangingListeners.stream().forEach((eventChangingListener) -> eventChangingListener.update(listenedEvents));
+        }
     }
     private EventSource.EventConsumer handlerConvertToConsumer(EventBusListener.EventHandler eventHandler){
         return (eventSourceName, sourceTerminal, eventName, message) -> {
@@ -111,5 +121,12 @@ public class EBSub {
                 }
             }
         };
+    }
+
+    /**
+     * 订阅事件变动监听
+     */
+    public interface ListenedEventChangingListener {
+        void update(List<String> listenedEvents);
     }
 }

@@ -81,3 +81,6 @@ END
 #### 3、DatabaseTopicEventSource
 主题形式（发布-订阅）基于数据库的事件源，每事件可被若干客户端各消费一次。
 //TODO
+
+### 注意事项
+SpringBoot环境下需在启动时显示调用ConfigurableApplicationContext.start()方法；

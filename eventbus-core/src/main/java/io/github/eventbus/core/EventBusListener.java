@@ -6,8 +6,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 import java.util.Collection;
 
 /**
@@ -16,7 +14,7 @@ import java.util.Collection;
  * @date 2022-09-02 09:31
  * @description
  */
-public class EventBusListener {
+public class EventBusListener{
     private static Logger LOGGER = LoggerFactory.getLogger(EventBusListener.class);
     private static EventBusListener INSTANCE;
 
@@ -30,7 +28,6 @@ public class EventBusListener {
         this.opening = opening;
         INSTANCE = this;
     }
-    @PostConstruct
     public void start() throws EventbusException {
         if (started) {
             return;
@@ -46,7 +43,6 @@ public class EventBusListener {
             LOGGER.warn("EventBusListener has already closed , you can not listen any event from EventBus!");
         }
     }
-    @PreDestroy
     public void stop() {
         if (started) {
             ebsub.stop();

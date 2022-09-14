@@ -21,10 +21,11 @@ public interface QueuedEventDAO {
 
     /**
      * 查询未消费事件并设置未已消费
+     * @param eventNameList 指定要消费的事件名
      * @param limit
      * @return
      */
-    List<QueuedEvent> selectUnconsumedThenUpdateConsumed(int limit);
+    List<QueuedEvent> selectUnconsumedThenUpdateConsumed(List<String> eventNameList, int limit);
 
     /**
      * 将指定事件ID设置为未消费状态

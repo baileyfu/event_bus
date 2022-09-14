@@ -1,6 +1,7 @@
 package io.github.eventbus.core;
 
 import io.github.eventbus.constants.EventbusConfigConst;
+import io.github.eventbus.core.monitor.ResourceMonitor;
 import io.github.eventbus.core.sources.EventSource;
 import io.github.eventbus.core.sources.filter.SubFilter;
 import io.github.eventbus.core.sources.filter.SubFilterChain;
@@ -54,7 +55,7 @@ public class EventbusConfiguration {
         return new EventBusListener(ebsub, handlerMap == null ? null : handlerMap.values(), open && lsnOpen);
     }
     @Bean
-    public ResourceReleaser resourceReleaser(){
-        return new ResourceReleaser();
+    public ResourceMonitor resourceMonitor(EventBusListener eventBusListener){
+        return new ResourceMonitor(eventBusListener);
     }
 }

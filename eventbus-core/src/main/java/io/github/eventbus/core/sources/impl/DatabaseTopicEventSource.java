@@ -2,7 +2,6 @@ package io.github.eventbus.core.sources.impl;
 
 import io.github.ali.commons.beanutils.BeanCopierUtils;
 import io.github.ali.commons.variable.MixedActionGenerator;
-import io.github.eventbus.constants.EventSourceConfigConst;
 import io.github.eventbus.core.sources.Event;
 import io.github.eventbus.core.sources.impl.database.dao.TopicalEventDAO;
 import io.github.eventbus.core.sources.impl.database.dao.TopicalEventTerminalDAO;
@@ -12,14 +11,13 @@ import io.github.eventbus.core.terminal.Terminal;
 import io.github.eventbus.core.terminal.TerminalFactory;
 import io.github.eventbus.exception.EventbusException;
 import io.github.eventbus.util.BeanConverter;
-import io.github.eventbus.util.IDGenerator;
 import org.apache.http.util.Asserts;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 发布-订阅型(Topic)<br/>
+ * 发布-订阅型(Topic)-事件发给所有订阅的Terminal，但只能被Terminal集群节点中的一个节点消费一次<br/>
  * 确保事件被正常消费,消费失败可重复
  *
  * @author ALi
@@ -30,7 +28,6 @@ import java.util.concurrent.TimeUnit;
 public class DatabaseTopicEventSource extends AbstractDatabaseEventSource {
     private TopicalEventDAO topicalEventDAO;
     private TopicalEventTerminalDAO topicalEventTerminalDAO;
-    private Boolean clusterConsuming;
     private String currentTerminalId;
 
     public DatabaseTopicEventSource(String name, TopicalEventDAO topicalEventDAO, TopicalEventTerminalDAO topicalEventTerminalDAO) {
@@ -62,11 +59,7 @@ public class DatabaseTopicEventSource extends AbstractDatabaseEventSource {
                         .build(topicalEvent.getSerialId());
             }
         };
-        if (clusterConsuming == null) {
-            setClusterConsuming(Boolean.valueOf(environment.getProperty(EventSourceConfigConst.TOPIC_CONSUME_BY_CLUSTER, "false")));
-        }
-        Terminal terminal = TerminalFactory.create();
-        currentTerminalId = clusterConsuming ? terminal.getName() : IDGenerator.generateTerminalId(terminal);
+        currentTerminalId = createCurrentTerminalId(TerminalFactory.create());
         registerTerminal();
         //启动定时(1天)剔除失活节点
         String actionName = this + ".inactivateTerminal";
@@ -78,7 +71,9 @@ public class DatabaseTopicEventSource extends AbstractDatabaseEventSource {
             }
         });
     }
-
+    protected String createCurrentTerminalId(Terminal terminal){
+        return terminal.getName();
+    }
     /**
      * 注册当前终端节点
      */
@@ -100,10 +95,6 @@ public class DatabaseTopicEventSource extends AbstractDatabaseEventSource {
      */
     private void inactivateTerminal() {
         //TODO
-    }
-
-    public void setClusterConsuming(Boolean clusterConsuming) {
-        this.clusterConsuming = clusterConsuming;
     }
 
     @Override
