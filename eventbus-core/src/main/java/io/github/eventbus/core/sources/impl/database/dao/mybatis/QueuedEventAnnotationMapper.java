@@ -20,9 +20,9 @@ public interface QueuedEventAnnotationMapper extends QueuedEventDAO {
     int insert(QueuedEvent queuedEvent);
 
     //TODO 修改存储过程支持指定事件名
-    @Select("{CALL selectUnconsumedThenUpdateConsumed(#{limit,mode=IN,jdbcType=TINYINT})}")
+    @Select("{CALL selectUnconsumedThenUpdateConsumed(#{eventNames,mode=IN,jdbcType=VARCHAR},#{limit,mode=IN,jdbcType=TINYINT})}")
     @Options(useCache = false, statementType = StatementType.CALLABLE)
-    List<QueuedEvent> selectUnconsumedThenUpdateConsumed(List<String> eventNameList, int limit);
+    List<QueuedEvent> selectUnconsumedThenUpdateConsumed(String eventNames, int limit);
 
     @Update("update eventbus_queued_event set state = " + QueuedEvent.STATE_UNCONSUMED + " where id = #{id}")
     @Options(useCache = false)

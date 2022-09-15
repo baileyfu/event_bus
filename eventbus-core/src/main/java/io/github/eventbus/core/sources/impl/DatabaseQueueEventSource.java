@@ -19,7 +19,7 @@ import java.util.*;
  * @description
  */
 public class DatabaseQueueEventSource extends AbstractDatabaseEventSource implements EBSub.ListenedEventChangingListener {
-    private List<String> listenedEvents;
+    private String listenedEvents;
     protected QueuedEventDAO queuedEventDAO;
     public DatabaseQueueEventSource(String name, QueuedEventDAO queuedEventDAO) {
         super(name);
@@ -57,7 +57,8 @@ public class DatabaseQueueEventSource extends AbstractDatabaseEventSource implem
 
     @Override
     protected Map<Long, Event> fetchAndSetUnconsumed() throws Exception {
-        if (listenedEvents == null || listenedEvents.size() == 0) {
+        if (listenedEvents == null) {
+            logger.info("DatabaseQueueEventSource.fetchAndSetUnconsumed() listenedEvents is empty , no event will be fetched.");
             return null;
         }
         Map<Long, Event> unconsumedMap = null;
@@ -89,6 +90,14 @@ public class DatabaseQueueEventSource extends AbstractDatabaseEventSource implem
 
     @Override
     public void update(List<String> listenedEvents) {
-        this.listenedEvents = listenedEvents;
+        if (listenedEvents != null && listenedEvents.size() > 0) {
+            StringBuilder temp=new StringBuilder();
+            for(String listenedEvent : listenedEvents) {
+                temp.append(listenedEvent).append(",");
+            }
+            this.listenedEvents = temp.substring(0, temp.length() - 1);
+        } else {
+            this.listenedEvents = null;
+        }
     }
 }

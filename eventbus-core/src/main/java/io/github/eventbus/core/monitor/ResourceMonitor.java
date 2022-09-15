@@ -31,7 +31,7 @@ public class ResourceMonitor implements ApplicationListener<ContextRefreshedEven
         try {
             eventBusListener.start();
         } catch (EventbusException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
     @PreDestroy

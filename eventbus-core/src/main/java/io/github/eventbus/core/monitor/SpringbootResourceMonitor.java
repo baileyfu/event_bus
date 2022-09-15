@@ -24,7 +24,7 @@ public class SpringbootResourceMonitor implements ApplicationListener<Applicatio
         try {
             eventBusListener.start();
         } catch (EventbusException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 }

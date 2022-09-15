@@ -40,7 +40,7 @@ CREATE TABLE `eventbus_queued_event` (
 ```
 存储过程DDL：
 ```
-CREATE DEFINER=`root`@`localhost` PROCEDURE `selectUnconsumedThenUpdateConsumed`(IN v_limit INT)
+CREATE DEFINER=`root`@`localhost` PROCEDURE `selectUnconsumedThenUpdateConsumed`(IN eventNames VARCHAR(1000) , v_limit INT)
 BEGIN
  DECLARE v_id BIGINT DEFAULT 0;
  DECLARE v_serial_id VARCHAR(50) DEFAULT '';
@@ -54,7 +54,7 @@ BEGIN
  DECLARE done INT DEFAULT FALSE;
 
  DECLARE selectUnconsumed CURSOR FOR 
-  select id,serial_id,name,message,message_type,source_terminal,state,create_time,update_time from eventbus_queued_event where state=0 limit v_limit for update;
+  select id,serial_id,name,message,message_type,source_terminal,state,create_time,update_time from eventbus_queued_event where state=0 and FIND_IN_SET(e.name,eventNames) limit v_limit for update;
  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
  
  CREATE TEMPORARY TABLE if not exists _tmp_eventbus_queued_event_(`id` BIGINT(20),`serial_id` varchar(50),`name` varchar(45),`message` varchar(1000),`message_type` varchar(45),`source_terminal` varchar(300),`state` tinyint(1),`create_time` datetime,`update_time` datetime);   
