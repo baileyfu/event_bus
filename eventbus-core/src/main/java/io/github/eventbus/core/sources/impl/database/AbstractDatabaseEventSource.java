@@ -1,4 +1,4 @@
-package io.github.eventbus.core.sources.impl;
+package io.github.eventbus.core.sources.impl.database;
 
 import com.alibaba.fastjson.JSON;
 import io.github.ali.commons.variable.MixedActionGenerator;
@@ -23,9 +23,17 @@ import java.util.function.Function;
  * @description
  */
 public abstract class AbstractDatabaseEventSource extends ManualConsumeEventSource {
-    protected Logger logger = LoggerFactory.getLogger(this.getClass());
-    protected int limit;
+    public static final int CLEAN_ACTION_INTERVAL_MINUTES = 30;
+
+    public static final boolean DEFAULT_CLEAN_REQUIRED = true;
+
+    public static final int DEFAULT_CLEAN_CYCLE = 1;
+    public static final int MIN_CLEAN_CYCLE = 1;
+
+    private Logger rollbackFailedLogger = LoggerFactory.getLogger("DatabaseEventSource.rollback.failed");
+    //是否需要清理已消费事件
     protected Boolean cleaningRequired;
+    //清理已消费事件的间隔（单位：小时）
     protected int cleanCycle;
     public AbstractDatabaseEventSource(String name) {
         super(name);
@@ -34,19 +42,16 @@ public abstract class AbstractDatabaseEventSource extends ManualConsumeEventSour
     @Override
     public void afterPropertiesSet() throws Exception {
         super.afterPropertiesSet();
-        if (limit == 0) {
-            setLimit(Integer.valueOf(environment.getProperty(EventSourceConfigConst.CONSUME_LIMIT, "100")));
-        }
-        if (cleanCycle == 0) {
-            setCleanCycle(Integer.valueOf(environment.getProperty(EventSourceConfigConst.CLEAN_CYCLE, "1")));
-        }
         if (cleaningRequired == null) {
-            setCleaningRequired(Boolean.valueOf(environment.getProperty(EventSourceConfigConst.CLEAN_REQUIRED, "true")));
+            setCleaningRequired(Boolean.valueOf(environment.getProperty(EventSourceConfigConst.MANUAL_DATABASE_CLEAN_REQUIRED, String.valueOf(DEFAULT_CLEAN_REQUIRED))));
+        }
+        if (cleanCycle < MIN_CLEAN_CYCLE) {
+            setCleanCycle(Integer.valueOf(environment.getProperty(EventSourceConfigConst.MANUAL_DATABASE_CLEAN_CYCLE, String.valueOf(DEFAULT_CLEAN_CYCLE))));
         }
         if (cleaningRequired) {
             //启动定时(30分钟)清理
             String actionName = this + ".clean";
-            MixedActionGenerator.loadAction(actionName, 30, TimeUnit.MINUTES, () -> {
+            MixedActionGenerator.loadAction(actionName, CLEAN_ACTION_INTERVAL_MINUTES, TimeUnit.MINUTES, () -> {
                 try{
                     clean();
                 } catch (Exception e) {
@@ -56,19 +61,11 @@ public abstract class AbstractDatabaseEventSource extends ManualConsumeEventSour
         }
     }
 
-    public void setLimit(int limit) {
-        this.limit = limit;
-        if (this.limit < 1) {
-            this.limit = 1;
-            logger.warn(EventSourceConfigConst.CONSUME_LIMIT + " value is " + this.limit + " , reset to 1.");
-        }
-    }
-
     public void setCleanCycle(int cleanCycle) {
         this.cleanCycle = cleanCycle;
-        if (this.cleanCycle < 1) {
-            this.cleanCycle = 1;
-            logger.warn(EventSourceConfigConst.CLEAN_CYCLE + " value is " + this.cleanCycle + " , reset to 1.");
+        if (this.cleanCycle < MIN_CLEAN_CYCLE) {
+            this.cleanCycle = DEFAULT_CLEAN_CYCLE;
+            logger.warn(EventSourceConfigConst.MANUAL_DATABASE_CLEAN_CYCLE + " value is " + cleanCycle + " , reset to " + DEFAULT_CLEAN_CYCLE);
         }
     }
 
@@ -91,7 +88,7 @@ public abstract class AbstractDatabaseEventSource extends ManualConsumeEventSour
                     } catch (Exception e) {
                         logger.error("DatabaseEventSource consume error with '" + event + "'!", e);
                         //单个事件消费失败不影响其他事件的消费
-                        rollback(eventId);
+                        rollback(eventId, event);
                     }
                 }
             }
@@ -104,13 +101,14 @@ public abstract class AbstractDatabaseEventSource extends ManualConsumeEventSour
     /**
      * 将事件状态重制为unconsumed
      * @param eventId
+     * @param event
      */
-    protected void rollback(long eventId) {
+    protected void rollback(long eventId, Event event) {
         try {
             setUnconsumed(eventId);
         } catch (Exception e) {
             logger.error("DatabaseEventSource rollback error with '" + eventId + "'!", e);
-            //TODO 写入指定日志让人工回滚
+            rollbackFailedLogger.error("DatabaseEventSource rollback consumed failed , the eventId is " + eventId + " , the event payload : " + JSON.toJSONString(event));
         }
     }
 

@@ -1,7 +1,6 @@
 package io.github.eventbus.core.sources;
 
 import io.github.eventbus.constants.EventSourceConfigConst;
-import org.springframework.util.Assert;
 
 /**
  * 手动消费,由EBSub负责拉取
@@ -11,7 +10,15 @@ import org.springframework.util.Assert;
  * @description
  */
 public abstract class ManualConsumeEventSource extends AbstractEventSource{
+    public static final long DEFAULT_CONSUME_INTERVAL = 100l;
+    public static final long MIN_CONSUME_INTERVAL = 10l;
+
+    public static final long DEFAULT_CONSUME_PAUSE = 1000l;
+    public static final long MIN_CONSUME_PAUSE = 1000l;
+
+    //消费间隔
     private long consumeInterval;
+    //事件列表未空时消费线程暂停事件
     private long pauseIfNotConsumed;
     public ManualConsumeEventSource(String name) {
         super(name);
@@ -20,17 +27,20 @@ public abstract class ManualConsumeEventSource extends AbstractEventSource{
     @Override
     public void afterPropertiesSet() throws Exception {
         super.afterPropertiesSet();
-        if (consumeInterval == 0l) {
-            setConsumeInterval(Long.valueOf(environment.getProperty(EventSourceConfigConst.MANUAL_CONSUME_INTERVAL, "100")));
+        if (consumeInterval < MIN_CONSUME_INTERVAL) {
+            setConsumeInterval(Long.valueOf(environment.getProperty(EventSourceConfigConst.MANUAL_CONSUME_INTERVAL, String.valueOf(DEFAULT_CONSUME_INTERVAL))));
         }
-        if (pauseIfNotConsumed == 0l) {
-            setPauseIfNotConsumed(Long.valueOf(environment.getProperty(EventSourceConfigConst.MANUAL_PAUSE_IF_NOT_CONSUMED, "1000")));
+        if (pauseIfNotConsumed < MIN_CONSUME_PAUSE) {
+            setPauseIfNotConsumed(Long.valueOf(environment.getProperty(EventSourceConfigConst.MANUAL_PAUSE_IF_NOT_CONSUMED, String.valueOf(DEFAULT_CONSUME_PAUSE))));
         }
     }
 
     public void setConsumeInterval(long consumeInterval) {
-        Assert.isTrue(consumeInterval >= 10l, "the consumeInterval can not less than 10 milliseconds.");
         this.consumeInterval = consumeInterval;
+        if (this.consumeInterval < MIN_CONSUME_INTERVAL) {
+            this.consumeInterval = DEFAULT_CONSUME_INTERVAL;
+            logger.warn(EventSourceConfigConst.MANUAL_CONSUME_INTERVAL + " value is " + consumeInterval + " , reset to " + DEFAULT_CONSUME_INTERVAL);
+        }
     }
     public long getConsumeInterval(){
         return consumeInterval;
@@ -40,7 +50,10 @@ public abstract class ManualConsumeEventSource extends AbstractEventSource{
         return pauseIfNotConsumed;
     }
     public void setPauseIfNotConsumed(long pauseIfNotConsumed) {
-        Assert.isTrue(pauseIfNotConsumed >= 100l, "the pauseIfNotConsumed can not less than 100 milliseconds.");
         this.pauseIfNotConsumed = pauseIfNotConsumed;
+        if (this.pauseIfNotConsumed < MIN_CONSUME_PAUSE) {
+            this.pauseIfNotConsumed = DEFAULT_CONSUME_PAUSE;
+            logger.warn(EventSourceConfigConst.MANUAL_PAUSE_IF_NOT_CONSUMED + " value is " + pauseIfNotConsumed + " , reset to " + DEFAULT_CONSUME_PAUSE);
+        }
     }
 }

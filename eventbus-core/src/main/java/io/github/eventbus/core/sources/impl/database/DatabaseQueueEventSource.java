@@ -1,4 +1,4 @@
-package io.github.eventbus.core.sources.impl;
+package io.github.eventbus.core.sources.impl.database;
 
 import io.github.eventbus.core.EBSub;
 import io.github.eventbus.core.sources.Event;
@@ -11,7 +11,7 @@ import org.apache.http.util.Asserts;
 import java.util.*;
 
 /**
- * 队列型(Queue)-事件只能被一个Terminal的一个节点消费一次<br/>
+ * 队列型(Queue)-事件只能被所有订阅的Terminal中的一个Terminal的一个节点消费一次<br/>
  * 确保事件被正常消费,消费失败可重复
  * @author ALi
  * @version 1.0
@@ -62,7 +62,7 @@ public class DatabaseQueueEventSource extends AbstractDatabaseEventSource implem
             return null;
         }
         Map<Long, Event> unconsumedMap = null;
-        List<QueuedEvent> unconsumedList = queuedEventDAO.selectUnconsumedThenUpdateConsumed(listenedEvents, limit);
+        List<QueuedEvent> unconsumedList = queuedEventDAO.selectUnconsumedThenUpdateConsumed(listenedEvents, consumeLimit);
         if (unconsumedList != null && unconsumedList.size() > 0) {
             List<Long> queuedEventIdList = new ArrayList<>();
             unconsumedMap = unconsumedList.parallelStream().reduce(new HashMap<>(), (map, queuedEvent) -> {

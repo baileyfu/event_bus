@@ -14,7 +14,7 @@ import org.springframework.context.support.AbstractApplicationContext;
 import java.util.function.Function;
 
 /**
- * 事件可能丢失,不可重复消费
+ * 进程内的线程发布/消费-事件可能丢失,不可重复消费
  *
  * @author ALi
  * @version 1.0

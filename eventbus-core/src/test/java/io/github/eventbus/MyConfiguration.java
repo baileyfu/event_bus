@@ -2,7 +2,7 @@ package io.github.eventbus;
 
 import io.github.eventbus.core.EventBusListener;
 import io.github.eventbus.core.sources.filter.SubFilter;
-import io.github.eventbus.core.sources.impl.DatabaseQueueEventSource;
+import io.github.eventbus.core.sources.impl.database.DatabaseQueueEventSource;
 import io.github.eventbus.core.sources.impl.SpringEventSource;
 import io.github.eventbus.core.sources.impl.database.dao.mybatis.QueuedEventAnnotationMapper;
 import io.github.eventbus.core.sources.impl.database.model.QueuedEvent;
