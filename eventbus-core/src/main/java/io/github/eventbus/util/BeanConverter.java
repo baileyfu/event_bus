@@ -1,4 +1,4 @@
-﻿package io.github.eventbus.util;
+package io.github.eventbus.util;
 
 import io.github.eventbus.core.sources.Event;
 import io.github.eventbus.core.sources.impl.database.model.QueuedEvent;

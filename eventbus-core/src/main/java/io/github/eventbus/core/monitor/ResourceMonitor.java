@@ -1,4 +1,4 @@
-﻿package io.github.eventbus.core.monitor;
+package io.github.eventbus.core.monitor;
 
 import io.github.ali.commons.variable.MixedActionGenerator;
 import io.github.eventbus.core.EventBusListener;

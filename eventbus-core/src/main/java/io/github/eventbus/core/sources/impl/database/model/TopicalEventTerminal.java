@@ -1,4 +1,4 @@
-﻿package io.github.eventbus.core.sources.impl.database.model;
+package io.github.eventbus.core.sources.impl.database.model;
 
 import java.util.Date;
 

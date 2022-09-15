@@ -1,4 +1,4 @@
-﻿package io.github.eventbus.core.sources.impl.database.dao;
+package io.github.eventbus.core.sources.impl.database.dao;
 
 import io.github.eventbus.core.sources.impl.database.model.TopicalEventTerminal;
 

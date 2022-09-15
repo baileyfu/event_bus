@@ -1,9 +1,9 @@
 # event_bus
-基于Spring易用的事件收发框架
+基于Spring易用的事件收发框架。
 
 ### 一、事件源
 #### 1、SpringEventSource
-基于Spring事件机制的**内存型**数据源，**事件不持久化可能丢失,消费失败不可回滚**
+基于Spring事件机制的**内存型**数据源，**事件不持久化可能丢失,消费失败不可回滚**。
 
 适合进程内多线程间发布/消费事件的场景。
 
@@ -168,6 +168,6 @@ CREATE TABLE `eventbus_topical_event_terminal` (
 ```
 
 ### 注意事项
-SpringBoot环境下需在启动时显式调用ConfigurableApplicationContext.start()方法，或者在Spring中加载SpringbootResourceMonitor类的对象，目的是触发事件监听器的启动；
+1、SpringBoot环境下需在启动时显式调用ConfigurableApplicationContext.start()方法，或者在Spring中加载SpringbootResourceMonitor类的对象，目的是触发事件监听器的启动；
 
-使用AbstractDatabaseEventSource类型的事件源时，定义名为DatabaseEventSource.rollback.failed的日志记录器可以查看回滚失败（消费失败引起的回滚，以让事件可以再次被消费）的事件，手动重置事件状态以使其被再次消费；
+2、使用AbstractDatabaseEventSource类型的事件源时，定义名为DatabaseEventSource.rollback.failed的日志记录器可以查看回滚失败（消费失败引起的回滚，以让事件可以再次被消费）的事件，手动重置事件状态以使其被再次消费；
