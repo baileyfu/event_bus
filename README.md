@@ -3,7 +3,7 @@
 
 ### 一、事件源
 #### 1、SpringEventSource
-基于Spring事件机制的**内存型**数据源，**事件不持久化可能丢失,不可重复消费**
+基于Spring事件机制的**内存型**数据源，**事件不持久化可能丢失,消费失败不可回滚**
 
 适合进程内多线程间发布/消费事件的场景。
 
@@ -12,7 +12,7 @@
 
 依赖数据库操作接口QueuedEventDAO，两种实现：
 ##### 1）、mybatis
-##### 配置方式（以mybatis-spring为例）：
+##### <span id = "AbstractDatabaseEventSource.mybatis.config">配置方式（以mybatis-spring为例）：</span>
 
 A、MapperScannerConfigurer中basePackage属性增加io.github.eventbus.core.sources.impl.database.dao.mybatis包名；
 
@@ -90,7 +90,7 @@ DatabaseTopicEventClusterSource:发布-订阅型(Topic)-事件发给所有订阅
 依赖数据库操作接口TopicalEventDAO和TopicalEventTerminalDAO，目前仅提供mybatis的实现：
 ##### 1）、mybatis
 ##### 配置方式
-见DatabaseQueueEventSource的配置方式。
+见[DatabaseQueueEventSource的配置方式](#AbstractDatabaseEventSource.mybatis.config)。
 
 ###### TopicalEventAnnotationMapper：
 事件表，基于注解形式实现，相关表和操作的SQL已经定义好，可直接使用。
@@ -168,6 +168,6 @@ CREATE TABLE `eventbus_topical_event_terminal` (
 ```
 
 ### 注意事项
-SpringBoot环境下需在启动时显示调用ConfigurableApplicationContext.start()方法，或者加载SpringbootResourceMonitor；
+SpringBoot环境下需在启动时显式调用ConfigurableApplicationContext.start()方法，或者在Spring中加载SpringbootResourceMonitor类的对象，目的是触发事件监听器的启动；
 
 使用AbstractDatabaseEventSource类型的事件源时，定义名为DatabaseEventSource.rollback.failed的日志记录器可以查看回滚失败（消费失败引起的回滚，以让事件可以再次被消费）的事件，手动重置事件状态以使其被再次消费；
