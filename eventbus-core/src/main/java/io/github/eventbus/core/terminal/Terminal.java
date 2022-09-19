@@ -1,7 +1,5 @@
 package io.github.eventbus.core.terminal;
 
-import org.apache.commons.lang3.builder.ToStringBuilder;
-
 import java.io.Serializable;
 import java.net.URL;
 
@@ -33,9 +31,9 @@ public class Terminal implements Serializable {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this)
-                .append("name", name)
-                .append("url", url)
+        return new StringBuilder()
+                .append("[name=").append(name)
+                .append(",url=").append(url).append("]")
                 .toString();
     }
 }

@@ -22,7 +22,7 @@ import java.util.Map;
  * @description
  */
 @Configuration
-public class EventbusConfiguration {
+public class EventbusConfiguration{
     @Bean
     public TerminalFactory terminalFactory(){
         return new TerminalFactory();

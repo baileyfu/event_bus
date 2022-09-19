@@ -13,12 +13,12 @@ import java.util.List;
  */
 public interface TopicalEventTerminalDAO {
     int insert(TopicalEventTerminal topicalEventTerminal);
-    int updateLastActiveTime(String terminalId);
-    int updateStateToDowntime(String terminalId);
-    TopicalEventTerminal selectByTerminalId(String terminalId);
+    int updateLastActiveTime(String eventSourceName, String terminalId);
+    int updateStateToDowntime(String eventSourceName, String terminalId);
+    TopicalEventTerminal selectByEventSourceNameAndTerminalId(String eventSourceName, String terminalId);
     /**
      * 所有当前活跃的客户端(状态正常且处于活跃期)
      * @return
      */
-    List<TopicalEventTerminal> selectActive();
+    List<TopicalEventTerminal> selectActive(String eventSourceName);
 }

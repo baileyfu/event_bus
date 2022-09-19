@@ -13,8 +13,9 @@ public class TopicalEventTerminal {
     public static final int TERMINAL_STATE_DOWNTIME = 1;
     private int id;
     /**
-     * 唯一索引
+     * eventSourceName+terminalId 唯一索引
      */
+    private String eventSourceName;
     private String terminalId;
     private int state;
     private Date createTime;
@@ -26,6 +27,14 @@ public class TopicalEventTerminal {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public String getEventSourceName() {
+        return eventSourceName;
+    }
+
+    public void setEventSourceName(String eventSourceName) {
+        this.eventSourceName = eventSourceName;
     }
 
     public String getTerminalId() {

@@ -20,22 +20,22 @@ public interface TopicalEventAnnotationMapper extends TopicalEventDAO {
     @Override
     int insert(TopicalEvent topicalEvent);
 
-    @Select("{CALL selectUnconsumedThenUpdateConsumedForTopical(#{terminalId,mode=IN,jdbcType=VARCHAR},#{limit,mode=IN,jdbcType=INT})}")
+    @Select("{CALL selectUnconsumedThenUpdateConsumedForTopical(#{terminalId,mode=IN,jdbcType=VARCHAR},#{limit,mode=IN,jdbcType=BIT})}")
     @Options(useCache = false, statementType = StatementType.CALLABLE)
     @Override
-    List<TopicalEvent> selectUnconsumedThenUpdateConsumed(String terminalId, int limit);
+    List<TopicalEvent> selectUnconsumedThenUpdateConsumed(@Param("terminalId") String terminalId,@Param("limit") int limit);
 
     @Update("update eventbus_topical_event set state = " + TopicalEvent.STATE_UNCONSUMED + " where id = #{id}")
     @Options(useCache = false)
     @Override
-    int updateStateToUnconsumed(long id);
+    int updateStateToUnconsumed(@Param("id") long id);
 
     /**
      * 直接删除被消费时间超过x小时的事件
      * @return
      */
-    @Delete("delete from eventbus_topical_event where state = " + TopicalEvent.STATE_CONSUMED + " and terminal_id = #{terminalId} and DATE_ADD(create_time,INTERVAL ${cycleHours} HOUR) < now())")
+    @Delete("delete from eventbus_topical_event where state = " + TopicalEvent.STATE_CONSUMED + " and terminal_id = #{terminalId} and DATE_ADD(create_time,INTERVAL ${cycleHours} HOUR) < now()")
     @Options(useCache = false)
     @Override
-    int cleanConsumed(String terminalId, int cycleHours);
+    int cleanConsumed(@Param("terminalId") String terminalId, @Param("cycleHours") int cycleHours);
 }

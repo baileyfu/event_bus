@@ -4,6 +4,7 @@ import io.github.eventbus.core.sources.EventSource;
 import io.github.eventbus.core.sources.route.DefaultPubRouter;
 import io.github.eventbus.core.sources.route.PubRouterChain;
 import io.github.eventbus.exception.EventbusException;
+import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
@@ -29,7 +30,7 @@ public class EBPub {
     private PubRouterChain pubRouterChain;
 
     EBPub(Collection<EventSource> sources, PubRouterChain pubRouterChain) {
-        Assert.noNullElements(sources, "the EBPub has no EventSource!");
+        Assert.isTrue(sources != null && sources.size() > 0,"the EBPub has no EventSource!");
         this.sources = sources.stream().reduce(new HashMap<>(), (map, es) -> {
             Assert.isTrue(!map.containsKey(es.getName()), "duplicated EventSource name : '" + es.getName() + "'!");
             map.put(es.getName(), es);

@@ -158,13 +158,15 @@ END
 ```
 CREATE TABLE `eventbus_topical_event_terminal` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `event_source_name` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
   `terminal_id` varchar(300) COLLATE utf8mb4_unicode_ci NOT NULL,
   `state` tinyint unsigned DEFAULT '0',
   `create_time` datetime NOT NULL,
   `last_active_time` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `terminal_id_UNIQUE` (`terminal_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  UNIQUE KEY `sourceName&terminalId_UNIQUE` (`event_source_name`,`terminal_id`),
+  KEY `sourceName_INDEX` (`event_source_name`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 ```
 
 ### 注意事项

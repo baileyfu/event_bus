@@ -19,20 +19,20 @@ public interface QueuedEventAnnotationMapper extends QueuedEventDAO {
     @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
     int insert(QueuedEvent queuedEvent);
 
-    @Select("{CALL selectUnconsumedThenUpdateConsumedForQueued(#{eventNames,mode=IN,jdbcType=VARCHAR},#{limit,mode=IN,jdbcType=INT})}")
+    @Select("{CALL selectUnconsumedThenUpdateConsumedForQueued(#{eventNames,mode=IN,jdbcType=VARCHAR},#{limit,mode=IN,jdbcType=BIT})}")
     @Options(useCache = false, statementType = StatementType.CALLABLE)
-    List<QueuedEvent> selectUnconsumedThenUpdateConsumed(String eventNames, int limit);
+    List<QueuedEvent> selectUnconsumedThenUpdateConsumed(@Param("eventNames") String eventNames,@Param("limit") int limit);
 
     @Update("update eventbus_queued_event set state = " + QueuedEvent.STATE_UNCONSUMED + " where id = #{id}")
     @Options(useCache = false)
-    int updateStateToUnconsumed(long id);
+    int updateStateToUnconsumed(@Param("id") long id);
 
     /**
      * 直接删除被消费时间超过x小时的事件
      * @return
      */
-    @Delete("delete from eventbus_queued_event where state = " + QueuedEvent.STATE_CONSUMED + " and DATE_ADD(create_time,INTERVAL ${cycleHours} HOUR) < now())")
+    @Delete("delete from eventbus_queued_event where state = " + QueuedEvent.STATE_CONSUMED + " and DATE_ADD(create_time,INTERVAL ${cycleHours} HOUR) < now()")
     @Options(useCache = false)
     @Override
-    int cleanConsumed(int cycleHours);
+    int cleanConsumed(@Param("cycleHours") int cycleHours);
 }

@@ -37,7 +37,7 @@ public class EBSub {
     private SubFilterChain subFilterChain;
 
     EBSub(Collection<EventSource> sources, SubFilterChain subFilterChain) {
-        Assert.noNullElements(sources, "the EBSub has no EventSource!");
+        Assert.isTrue(sources != null && sources.size() > 0,"the EBSub has no EventSource!");
         this.sources = sources;
         this.consumerMap = new HashMap<>();
         this.consumerGetter = (eventName) -> consumerMap.getOrDefault(eventName, doNothingHandler);
@@ -113,11 +113,11 @@ public class EBSub {
             if (subFilterChain.doFilter(eventName)) {
                 eventHandler.handle(sourceTerminal, eventName, message);
                 if(logger.isDebugEnabled()){
-                    logger.debug(">>>+++EBSub.EventConsumer for '" + eventSourceName + "' has consumed the event '"+eventName+"' from '"+sourceTerminal+"'");
+                    logger.debug(">>>+++EBSub.EventConsumer for '" + eventSourceName + "' has consumed the event '"+eventName+"' with message '"+message+"' from '"+sourceTerminal+"'");
                 }
             } else {
                 if(logger.isDebugEnabled()){
-                    logger.debug(">>>---EBSub.EventConsumer for '" + eventSourceName + "' has filtered the event '"+eventName+"' from '"+sourceTerminal+"'");
+                    logger.debug(">>>---EBSub.EventConsumer for '" + eventSourceName + "' has filtered the event '"+eventName+"' with message '"+message+"' from '"+sourceTerminal+"'");
                 }
             }
         };

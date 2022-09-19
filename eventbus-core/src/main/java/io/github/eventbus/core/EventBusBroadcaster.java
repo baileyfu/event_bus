@@ -16,6 +16,7 @@ public class EventBusBroadcaster {
 
     private EBPub ebpub;
     private boolean opening;
+
     EventBusBroadcaster(EBPub ebpub, boolean opening) {
         this.ebpub = ebpub;
         this.opening = opening;

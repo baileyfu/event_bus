@@ -22,6 +22,7 @@ public class EventBusListener{
     Collection<EventHandler> handlers;
     private boolean opening;
     private boolean started;
+
     EventBusListener(EBSub ebsub, Collection<EventHandler> handlers, boolean opening) {
         this.ebsub = ebsub;
         this.handlers = handlers;

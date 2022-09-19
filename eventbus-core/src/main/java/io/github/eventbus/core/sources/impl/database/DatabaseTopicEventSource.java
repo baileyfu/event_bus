@@ -100,9 +100,11 @@ public class DatabaseTopicEventSource extends AbstractDatabaseEventSource {
      * 注册当前终端节点
      */
     private void registerTerminal(){
-        TopicalEventTerminal topicalEventTerminal = topicalEventTerminalDAO.selectByTerminalId(currentTerminalId);
+        String eventSourceName = this.getName();
+        TopicalEventTerminal topicalEventTerminal = topicalEventTerminalDAO.selectByEventSourceNameAndTerminalId(eventSourceName, currentTerminalId);
         if (topicalEventTerminal == null) {
             topicalEventTerminal = new TopicalEventTerminal();
+            topicalEventTerminal.setEventSourceName(eventSourceName);
             topicalEventTerminal.setTerminalId(currentTerminalId);
             topicalEventTerminal.setState(TopicalEventTerminal.TERMINAL_STATE_NORMAL);
             topicalEventTerminal.setLastActiveTime(new Date());
@@ -117,19 +119,20 @@ public class DatabaseTopicEventSource extends AbstractDatabaseEventSource {
      * 激活当前节点并更新最后活跃时间
      */
     private void activateTerminal(){
-        topicalEventTerminalDAO.updateLastActiveTime(currentTerminalId);
+        topicalEventTerminalDAO.updateLastActiveTime(getName(), currentTerminalId);
     }
     /**
      * 剔除不再活跃的节点,使其不再收到事件
      */
     private void inactivateTerminal() {
-        List<TopicalEventTerminal> activeTerminals = topicalEventTerminalDAO.selectActive();
+        String eventSourceName = this.getName();
+        List<TopicalEventTerminal> activeTerminals = topicalEventTerminalDAO.selectActive(eventSourceName);
         if (activeTerminals != null && activeTerminals.size() > 0) {
             for (TopicalEventTerminal topicalEventTerminal : activeTerminals) {
                 //失活条件:距离最后一次激活超过x小时
                 Date lastActiveTime = topicalEventTerminal.getLastActiveTime();
                 if (lastActiveTime == null || DateUtils.addHours(lastActiveTime, inactivateCycle).before(new Date())) {
-                    topicalEventTerminalDAO.updateStateToDowntime(topicalEventTerminal.getTerminalId());
+                    topicalEventTerminalDAO.updateStateToDowntime(eventSourceName, topicalEventTerminal.getTerminalId());
                 }
             }
         }
@@ -151,7 +154,7 @@ public class DatabaseTopicEventSource extends AbstractDatabaseEventSource {
     protected void save(Event event) throws Exception {
         TopicalEvent topicalEvent = (TopicalEvent) eventSerializer.serialize(event);
         //TODO 缓存
-        List<TopicalEventTerminal> activeTerminal = topicalEventTerminalDAO.selectActive();
+        List<TopicalEventTerminal> activeTerminal = topicalEventTerminalDAO.selectActive(this.getName());
         if (activeTerminal != null && activeTerminal.size() > 0) {
             for (TopicalEventTerminal terminal : activeTerminal) {
                 TopicalEvent target = BeanCopierUtils.copyOne2One(topicalEvent, TopicalEvent.class);
