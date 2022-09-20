@@ -1,5 +1,6 @@
 package io.github.eventbus.core;
 
+import io.github.eventbus.core.monitor.ResourceMonitor;
 import io.github.eventbus.core.terminal.Terminal;
 import io.github.eventbus.exception.EventbusException;
 import org.slf4j.Logger;
@@ -28,8 +29,22 @@ public class EventBusListener{
         this.handlers = handlers;
         this.opening = opening;
         INSTANCE = this;
+        ResourceMonitor.registerResource(new ResourceMonitor.Switch() {
+            @Override
+            public void doOn() throws Exception {
+                start();
+            }
+            @Override
+            public void doOff() throws Exception {
+                stop();
+            }
+            @Override
+            public String identify() {
+                return EventBusListener.this.toString();
+            }
+        });
     }
-    public void start() throws EventbusException {
+    void start() throws EventbusException {
         if (started) {
             return;
         }
@@ -41,10 +56,10 @@ public class EventBusListener{
             started = true;
             LOGGER.info("EventBusListener is running!");
         }else{
-            LOGGER.warn("EventBusListener has already closed , you can not listen any event from EventBus!");
+            LOGGER.warn("EventBusListener has already closed , you will could not listen any event from EventBus!");
         }
     }
-    public void stop() {
+    void stop() {
         if (started) {
             ebsub.stop();
             started = false;
@@ -53,8 +68,21 @@ public class EventBusListener{
     }
 
     public static void listen(EventHandler handler) {
-        Assert.hasLength(handler.targetEventName(), "EventHandler's targetEventName can not be empty!");
-        INSTANCE.ebsub.listen(handler.targetEventName(), handler);
+        String eventName = handler.targetEventName();
+        if (INSTANCE == null || INSTANCE.ebsub == null) {
+            LOGGER.warn("EventBusListener is not initialized , you can not listen '" + eventName + "' from EventBus!");
+            return;
+        }
+        if (!INSTANCE.started) {
+            LOGGER.warn("EventBusListener is not started , you can not listen '" + eventName + "' from EventBus!");
+            return;
+        }
+        if (!INSTANCE.opening) {
+            LOGGER.warn("EventBusListener has already closed , you can not listen '" + eventName + "' from EventBus!");
+            return;
+        }
+        Assert.hasLength(eventName, "EventHandler's targetEventName can not be empty!");
+        INSTANCE.ebsub.listen(eventName, handler);
         if (UniqueEventHandler.class.isAssignableFrom(handler.getClass())) {
             INSTANCE.ebsub.setUniqueEventHandler(handler);
         }

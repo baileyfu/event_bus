@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import io.github.ali.commons.variable.MixedActionGenerator;
 import io.github.eventbus.constants.EventSourceConfigConst;
 import io.github.eventbus.constants.JSONConfig;
+import io.github.eventbus.core.monitor.ResourceMonitor;
 import io.github.eventbus.core.sources.Event;
 import io.github.eventbus.core.sources.ManualConsumeEventSource;
 import io.github.eventbus.core.terminal.Terminal;
@@ -49,13 +50,26 @@ public abstract class AbstractDatabaseEventSource extends ManualConsumeEventSour
             setCleanCycle(Integer.valueOf(environment.getProperty(EventSourceConfigConst.MANUAL_DATABASE_CLEAN_CYCLE, String.valueOf(DEFAULT_CLEAN_CYCLE))));
         }
         if (cleaningRequired) {
-            //启动定时(30分钟)清理
-            String actionName = this + ".clean";
-            MixedActionGenerator.loadAction(actionName, CLEAN_ACTION_INTERVAL_MINUTES, TimeUnit.MINUTES, () -> {
-                try{
-                    clean();
-                } catch (Exception e) {
-                    logger.error("the action of " + actionName + ".clean() error!", e);
+            //启动定时(30分钟)清理已消费事件
+            final String actionName = this + ".clean";
+            ResourceMonitor.registerResource(new ResourceMonitor.Switch() {
+                @Override
+                public void doOn() throws Exception {
+                    MixedActionGenerator.loadAction(actionName, CLEAN_ACTION_INTERVAL_MINUTES, TimeUnit.MINUTES, () -> {
+                        try {
+                            clean();
+                        } catch (Exception e) {
+                            logger.error("the action of " + actionName + ".clean() error!", e);
+                        }
+                    });
+                }
+                @Override
+                public void doOff() throws Exception {
+                    MixedActionGenerator.unloadAction(actionName, false);
+                }
+                @Override
+                public String identify() {
+                    return actionName;
                 }
             });
         }

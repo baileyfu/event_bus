@@ -1,20 +1,19 @@
 package io.github.eventbus.core.monitor;
 
 import org.springframework.beans.factory.DisposableBean;
-import org.springframework.boot.context.event.ApplicationStartedEvent;
 import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextRefreshedEvent;
 
 /**
- * Springboot资源管理器<br/>
- *
+ * Spring资源管理器<br/>
  * @author ALi
  * @version 1.0
  * @date 2022-09-13 10:55
  * @description
  */
-public class SpringbootResourceMonitor extends ResourceMonitor implements ApplicationListener<ApplicationStartedEvent>, DisposableBean {
+public class SpringResourceMonitor extends ResourceMonitor implements ApplicationListener<ContextRefreshedEvent>, DisposableBean {
     @Override
-    public void onApplicationEvent(ApplicationStartedEvent applicationStartedEvent) {
+    public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {
         doStart();
     }
 

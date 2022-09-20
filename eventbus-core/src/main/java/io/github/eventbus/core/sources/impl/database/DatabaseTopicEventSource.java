@@ -3,6 +3,7 @@ package io.github.eventbus.core.sources.impl.database;
 import io.github.ali.commons.beanutils.BeanCopierUtils;
 import io.github.ali.commons.variable.MixedActionGenerator;
 import io.github.eventbus.constants.EventSourceConfigConst;
+import io.github.eventbus.core.monitor.ResourceMonitor;
 import io.github.eventbus.core.sources.Event;
 import io.github.eventbus.core.sources.impl.database.dao.TopicalEventDAO;
 import io.github.eventbus.core.sources.impl.database.dao.TopicalEventTerminalDAO;
@@ -78,18 +79,31 @@ public class DatabaseTopicEventSource extends AbstractDatabaseEventSource {
                         .build(topicalEvent.getSerialId());
             }
         };
-        currentTerminalId = createCurrentTerminalId(TerminalFactory.create());
-        registerTerminal();
         //启动定时(1小时)激活当前节点并剔除失活节点
-        String actionName = this + ".inactivateTerminal";
-        MixedActionGenerator.loadAction(actionName, INACTIVATE_ACTION_INTERVAL_HOURS, TimeUnit.HOURS, () -> {
-            try {
-                activateTerminal();
-                if (inactivateRequired) {
-                    inactivateTerminal();
-                }
-            } catch (Exception e) {
-                logger.error("the action of " + actionName + " error!", e);
+        final String actionName = this + ".inactivateTerminal";
+        ResourceMonitor.registerResource(new ResourceMonitor.Switch() {
+            @Override
+            public String identify() {
+                return actionName;
+            }
+            @Override
+            public void doOn() throws Exception {
+                currentTerminalId = createCurrentTerminalId(TerminalFactory.create());
+                registerTerminal();
+                MixedActionGenerator.loadAction(actionName, INACTIVATE_ACTION_INTERVAL_HOURS, TimeUnit.HOURS, () -> {
+                    try {
+                        activateTerminal();
+                        if (inactivateRequired) {
+                            inactivateTerminal();
+                        }
+                    } catch (Exception e) {
+                        logger.error("the action of " + actionName + " error!", e);
+                    }
+                });
+            }
+            @Override
+            public void doOff() throws Exception {
+                MixedActionGenerator.unloadAction(actionName, false);
             }
         });
     }

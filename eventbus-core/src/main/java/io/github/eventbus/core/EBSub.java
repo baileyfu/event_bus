@@ -62,7 +62,7 @@ public class EBSub {
         }
     }
     private void startConsume(ManualConsumeEventSource manualConsumeEventSource){
-        MixedActionGenerator.loadAction(manualConsumeEventSource.getName(),manualConsumeEventSource.getConsumeInterval(),TimeUnit.MILLISECONDS,()->{
+        MixedActionGenerator.loadAction(generateActionName(manualConsumeEventSource),manualConsumeEventSource.getConsumeInterval(),TimeUnit.MILLISECONDS,()->{
             try {
                 int consumed = manualConsumeEventSource.consume(consumerGetter);
                 // 如果没消费到消息则暂停x毫秒
@@ -87,12 +87,19 @@ public class EBSub {
                     ((AutoConsumeEventSource)eventSource).stopConsume();
                 } else if (eventSource instanceof ManualConsumeEventSource) {
                     //由ResourceReleaser来负责最终的释放
-                    MixedActionGenerator.unloadAction(eventSource.getName(),false);
+                    MixedActionGenerator.unloadAction(generateActionName(eventSource),false);
                 }
             } catch (Exception e) {
                 logger.error("EBSub stop EventSource named '" + eventSource.getName() + "' error!", e);
             }
         }
+    }
+    private String generateActionName(EventSource eventSource) {
+        return new StringBuilder()
+                .append("Eventbus.EventSource.")
+                .append(eventSource.getName())
+                .append(".consuming")
+                .toString();
     }
     //当设置了uniqueEventHandler后,consumerMap将被忽略,所有事件都由uniqueEventConsumer处理
     void setUniqueEventHandler(EventBusListener.EventHandler uniqueEventHandler){

@@ -1,46 +1,82 @@
 package io.github.eventbus.core.monitor;
 
 import io.github.ali.commons.variable.MixedActionGenerator;
-import io.github.eventbus.core.EventBusListener;
-import io.github.eventbus.exception.EventbusException;
-import org.springframework.context.ApplicationListener;
-import org.springframework.context.event.ContextRefreshedEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.annotation.PreDestroy;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 资源管理器<br/>
  * 框架启动时申请的各种资源由该类负责启动/释放
  * @author ALi
  * @version 1.0
- * @date 2022-09-14 10:55
+ * @date 2022-09-16 10:55
  * @description
  */
-public class ResourceMonitor implements ApplicationListener<ContextRefreshedEvent> {
-    private EventBusListener eventBusListener;
-    public ResourceMonitor(EventBusListener eventBusListener) {
-        this.eventBusListener = eventBusListener;
+public abstract class ResourceMonitor {
+    private static Logger LOGGER = LoggerFactory.getLogger(ResourceMonitor.class);
+    private static boolean STARTED;
+    protected void doStart() {
+        synchronized (ResourceMonitor.class) {
+            if (!STARTED) {
+                String logHead = "Eventbus." + this.getClass().getSimpleName();
+                SWITCHES.stream().forEach((Switch) -> {
+                    Switch.on();
+                    LOGGER.info(logHead + " has started action of [" + Switch.identify() + "]");
+                });
+                LOGGER.info(logHead + " has already started all resource!!!");
+                STARTED = true;
+            }
+        }
+    }
+    protected void doStop() {
+        synchronized (ResourceMonitor.class) {
+            if (STARTED) {
+                String logHead = "Eventbus." + this.getClass().getSimpleName();
+                SWITCHES.stream().forEach((Switch) -> {
+                    try {
+                        Switch.off();
+                        LOGGER.info(logHead + " has stopped action of [" + Switch.identify()+"]");
+                    } catch (Exception e) {
+                        LOGGER.error(logHead + ".doStop() error!", e);
+                    }
+                });
+                MixedActionGenerator.shutdown();
+                LOGGER.info(logHead + " has already stopped all resource!!!");
+                STARTED = false;
+            }
+        }
     }
 
     /**
-     * SpringBoot需要显示调用ConfigurableApplicationContext.start()才会出发ContextRefreshedEvent事件<br/>
-     * @param contextRefreshedEvent
+     * 由Monitor统一启停
+     * @param Switch
      */
-    @Override
-    public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {
-        try {
-            eventBusListener.start();
-        } catch (EventbusException e) {
-            throw new RuntimeException(e);
-        }
+    public static void registerResource(Switch Switch) {
+        SWITCHES.add(Switch);
     }
-    @PreDestroy
-    public void stop(){
-        try {
-            eventBusListener.stop();
-            MixedActionGenerator.shutdown();
-        } catch (Exception e) {
-            e.printStackTrace();
+    private static List<Switch> SWITCHES = new ArrayList<>();
+    public interface Switch {
+        default void on() {
+            try {
+                doOn();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
+        default String identify(){
+            return this.toString();
+        }
+        default void off() {
+            try {
+                doOff();
+            } catch (Exception e) {
+                LOGGER.error("ResourceMonitor.Switch." + identify() + ".off() error!", e);
+            }
+        }
+        void doOn() throws Exception;
+        void doOff() throws Exception;
     }
 }

@@ -21,7 +21,7 @@ public class EventBusBroadcaster {
         this.ebpub = ebpub;
         this.opening = opening;
         if(!this.opening){
-            LOGGER.warn("EventBusBroadcaster has already closed , you can not broadcast any event to EventBus!");
+            LOGGER.warn("EventBusBroadcaster has already closed , you will could not broadcast any event to EventBus!");
         }
         INSTANCE = this;
     }
@@ -31,14 +31,20 @@ public class EventBusBroadcaster {
     }
 
     public static boolean broadcast(String eventName, Object message) {
-        if (INSTANCE.opening) {
-            try {
-                INSTANCE.ebpub.emit(eventName,message);
-                return true;
-            } catch (EventbusException e) {
-                LOGGER.error("BusBroadcaster.broadcast event " + eventName + " with '" + message + "' error!", e);
-            }
+        if (INSTANCE == null || INSTANCE.ebpub == null) {
+            LOGGER.warn("EventBusBroadcaster is not initialized , you can not broadcast '" + eventName + "' to EventBus!");
+            return false;
         }
-        return false;
+        if (!INSTANCE.opening) {
+            LOGGER.warn("EventBusBroadcaster has already closed , you can not broadcast '" + eventName + "' to EventBus!");
+            return false;
+        }
+        try {
+            INSTANCE.ebpub.emit(eventName,message);
+        } catch (EventbusException e) {
+            LOGGER.error("BusBroadcaster.broadcast event " + eventName + " with '" + message + "' error!", e);
+            return false;
+        }
+        return true;
     }
 }
