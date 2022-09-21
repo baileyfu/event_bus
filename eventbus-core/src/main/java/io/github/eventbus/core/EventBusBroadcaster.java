@@ -26,10 +26,21 @@ public class EventBusBroadcaster {
         INSTANCE = this;
     }
 
+    /**
+     * 发布消息
+     * @param eventName 事件名称；全局唯一，推荐格式：系统名.服务名.业务领域名.具体事件名
+     * @return
+     */
     public static boolean broadcast(String eventName) {
         return broadcast(eventName, null);
     }
 
+    /**
+     * 发布消息
+     * @param eventName 事件名称；全局唯一，推荐格式：系统名.服务名.业务领域名.具体事件名
+     * @param message
+     * @return
+     */
     public static boolean broadcast(String eventName, Object message) {
         if (INSTANCE == null || INSTANCE.ebpub == null) {
             LOGGER.warn("EventBusBroadcaster is not initialized , you can not broadcast '" + eventName + "' to EventBus!");

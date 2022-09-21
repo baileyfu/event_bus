@@ -22,35 +22,49 @@ import java.util.function.Function;
  * @date 2022-05-26 13:56
  * @description
  */
-public class EBSub {
+public class EBSub implements SubFilterChain.ListenedFilterChangingListener {
     private Logger logger = LoggerFactory.getLogger(EBSub.class);
-    private EventSource.EventConsumer doNothingHandler = (eventSourceName, sourceTerminal, eventName, message) -> {
+    private EventSource.EventConsumer noMatchedHandler = (eventSourceName, sourceTerminal, eventName, message) -> {
         if(logger.isDebugEnabled()){
-            logger.debug("EBSub.doNothingHandler for '" + eventSourceName + "' consumed event '" + eventName + "' from '"+sourceTerminal+"'");
+            logger.debug(">>>---Eventbus received event '" + eventName + "' with message '"+message+"' from '"+sourceTerminal + "' on Eventsource '" + eventSourceName + "' , but no matched EventConsumer found.");
         }
+        return false;
+    };
+    private EventSource.EventConsumer filteredHandler = (eventSourceName, sourceTerminal, eventName, message) -> {
+        if(logger.isDebugEnabled()){
+            logger.debug(">>>---Eventbus received event '" + eventName + "' with message '"+message+"' from '"+sourceTerminal + "' on Eventsource '" + eventSourceName + "' , but it has been filtered.");
+        }
+        return false;
     };
     private Collection<EventSource> sources;
     private Collection<ListenedEventChangingListener> eventChangingListeners;
     private final Map<String, EventSource.EventConsumer> consumerMap;
+    private HashSet<String> filteredEvent;
+    private EventSource.EventConsumer uniqueEventConsumer;
     //封装对consumerMap的操作
     private Function<String, EventSource.EventConsumer> consumerGetter;
-    private SubFilterChain subFilterChain;
+    private final SubFilterChain subFilterChain;
 
     EBSub(Collection<EventSource> sources, SubFilterChain subFilterChain) {
         Assert.isTrue(sources != null && sources.size() > 0,"the EBSub has no EventSource!");
         this.sources = sources;
         this.consumerMap = new HashMap<>();
-        this.consumerGetter = (eventName) -> consumerMap.getOrDefault(eventName, doNothingHandler);
+        this.filteredEvent = new HashSet<>();
+        this.consumerGetter = (eventName) -> {
+            if (filteredEvent.contains(eventName)) {
+                return filteredHandler;
+            }
+            EventSource.EventConsumer consumer = consumerMap.get(eventName);
+            return consumer == null ? noMatchedHandler : uniqueEventConsumer != null ? uniqueEventConsumer : consumer;
+        };
         this.subFilterChain = subFilterChain;
+        this.subFilterChain.registerFilterChangingListener(this);
     }
     void start() throws EventbusException{
-        List<String> listenedEvents = new ArrayList<>(consumerMap.keySet());
         for (EventSource eventSource : sources) {
             if (eventSource instanceof ListenedEventChangingListener) {
                 eventChangingListeners = eventChangingListeners == null ? new ArrayList<>() : eventChangingListeners;
-                ListenedEventChangingListener listenedEventChangingListener = (ListenedEventChangingListener) eventSource;
-                listenedEventChangingListener.update(listenedEvents);
-                eventChangingListeners.add(listenedEventChangingListener);
+                eventChangingListeners.add((ListenedEventChangingListener) eventSource);
             }
             if (eventSource instanceof AutoConsumeEventSource) {
                 ((AutoConsumeEventSource) eventSource).startConsume(consumerGetter);
@@ -60,6 +74,7 @@ public class EBSub {
                 throw new EventbusException(String.format("No supported EventSource type '%s' , the EventSource must extends from ManualConsumeEventSource.class or AutoConsumeEventSource.class",eventSource.getClass()));
             }
         }
+        invokeListenedEventChangingListener();
     }
     private void startConsume(ManualConsumeEventSource manualConsumeEventSource){
         MixedActionGenerator.loadAction(generateActionName(manualConsumeEventSource),manualConsumeEventSource.getConsumeInterval(),TimeUnit.MILLISECONDS,()->{
@@ -103,37 +118,63 @@ public class EBSub {
     }
     //当设置了uniqueEventHandler后,consumerMap将被忽略,所有事件都由uniqueEventConsumer处理
     void setUniqueEventHandler(EventBusListener.EventHandler uniqueEventHandler){
-        EventSource.EventConsumer uniqueEventConsumer = handlerConvertToConsumer(uniqueEventHandler);
-        consumerGetter = (eventName) -> uniqueEventConsumer;
+        Assert.notNull(uniqueEventHandler, "the UniqueEventHandler can not be null !!!");
+        this.uniqueEventConsumer = handlerConvertToConsumer(uniqueEventHandler);
     }
     void listen(String eventName, EventBusListener.EventHandler eventHandler) {
         Assert.hasLength(eventName, "'eventName' can not be empty.");
         Assert.notNull(eventHandler, "'eventHandler' can not be null.");
         consumerMap.put(eventName, handlerConvertToConsumer(eventHandler));
-        if (eventChangingListeners != null) {
-            List<String> listenedEvents = new ArrayList<>(consumerMap.keySet());
-            eventChangingListeners.stream().forEach((eventChangingListener) -> eventChangingListener.update(listenedEvents));
+        if (!subFilterChain.doFilter(eventName)) {
+            filteredEvent.add(eventName);
         }
+        invokeListenedEventChangingListener();
     }
     private EventSource.EventConsumer handlerConvertToConsumer(EventBusListener.EventHandler eventHandler){
         return (eventSourceName, sourceTerminal, eventName, message) -> {
-            if (subFilterChain.doFilter(eventName)) {
-                eventHandler.handle(sourceTerminal, eventName, message);
-                if(logger.isDebugEnabled()){
-                    logger.debug(">>>+++EBSub.EventConsumer for '" + eventSourceName + "' has consumed the event '"+eventName+"' with message '"+message+"' from '"+sourceTerminal+"'");
-                }
-            } else {
-                if(logger.isDebugEnabled()){
-                    logger.debug(">>>---EBSub.EventConsumer for '" + eventSourceName + "' has filtered the event '"+eventName+"' with message '"+message+"' from '"+sourceTerminal+"'");
-                }
+            eventHandler.handle(sourceTerminal, eventName, message);
+            if(logger.isDebugEnabled()){
+                logger.debug(">>>+++EBSub.EventConsumer for '" + eventSourceName + "' has consumed the event '"+eventName+"' with message '"+message+"' from '"+sourceTerminal+"'");
             }
+            return true;
         };
     }
 
     /**
+     * 获取SubFilterChain调用updateFilters()方法来热更新过滤规则
+     * @return
+     */
+    SubFilterChain getSubFilterChain() {
+        return subFilterChain;
+    }
+
+    @Override
+    public void notifyCausedByFilterChanging() {
+        HashSet<String> filteredEvent = new HashSet<>();
+        for (String eventName : consumerMap.keySet()) {
+            if (!subFilterChain.doFilter(eventName)) {
+                filteredEvent.add(eventName);
+            }
+        }
+        this.filteredEvent = filteredEvent;
+    }
+
+    private void invokeListenedEventChangingListener() {
+        if (eventChangingListeners != null && eventChangingListeners.size() > 0) {
+            List<String> listenedEvents = new ArrayList<>(consumerMap.keySet());
+            for (ListenedEventChangingListener eventChangingListener : eventChangingListeners) {
+                try {
+                    eventChangingListener.notifyCausedByListenedEventChanging(listenedEvents);
+                } catch (Exception e) {
+                    logger.error("ListenedEventChangingListener.update() error!", e);
+                }
+            }
+        }
+    }
+    /**
      * 订阅事件变动监听
      */
     public interface ListenedEventChangingListener {
-        void update(List<String> listenedEvents);
+        void notifyCausedByListenedEventChanging(List<String> listenedEvents);
     }
 }

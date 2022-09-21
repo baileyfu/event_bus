@@ -95,10 +95,10 @@ public abstract class AbstractDatabaseEventSource extends ManualConsumeEventSour
             if (waitingEvents != null && waitingEvents.size() > 0) {
                 for (Long eventId : waitingEvents.keySet()) {
                     Event event = waitingEvents.get(eventId);
-                    EventConsumer eventConsumer = consumerGetter.apply(event.getName());
                     try {
-                        eventConsumer.accept(this.getName(), event.getSourceTerminal(), event.getName(), event.getMessage());
-                        consumedCount++;
+                        if (consumerGetter.apply(event.getName()).accept(this.getName(), event.getSourceTerminal(), event.getName(), event.getMessage())) {
+                            consumedCount++;
+                        }
                     } catch (Exception e) {
                         logger.error("DatabaseEventSource consume error with '" + event + "'!", e);
                         //单个事件消费失败不影响其他事件的消费

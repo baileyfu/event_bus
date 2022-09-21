@@ -8,7 +8,10 @@ import io.github.eventbus.exception.EventbusException;
 import io.github.eventbus.util.BeanConverter;
 import org.apache.http.util.Asserts;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 队列型(Queue)-事件只能被所有订阅的Terminal中的一个Terminal的一个节点消费一次<br/>
@@ -89,7 +92,7 @@ public class DatabaseQueueEventSource extends AbstractDatabaseEventSource implem
     }
 
     @Override
-    public void update(List<String> listenedEvents) {
+    public void notifyCausedByListenedEventChanging(List<String> listenedEvents) {
         if (listenedEvents != null && listenedEvents.size() > 0) {
             StringBuilder temp=new StringBuilder();
             for(String listenedEvent : listenedEvents) {

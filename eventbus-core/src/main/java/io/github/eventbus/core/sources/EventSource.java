@@ -41,8 +41,9 @@ public interface EventSource {
          * @param sourceTerminal
          * @param eventName
          * @param message
+         * @return 是否正常消费（不同于消费失败）
          * @throws Exception
          */
-        void accept(String eventSourceName, Terminal sourceTerminal, String eventName, Object message) throws Exception;
+        boolean accept(String eventSourceName, Terminal sourceTerminal, String eventName, Object message) throws Exception;
     }
 }

@@ -4,7 +4,6 @@ import io.github.eventbus.core.sources.EventSource;
 import io.github.eventbus.core.sources.route.DefaultPubRouter;
 import io.github.eventbus.core.sources.route.PubRouterChain;
 import io.github.eventbus.exception.EventbusException;
-import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;

@@ -1,6 +1,12 @@
 package io.github.eventbus.core.sources.filter;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.util.Assert;
+
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * @author ALi
@@ -9,10 +15,17 @@ import java.util.Collection;
  * @description
  */
 public class SubFilterChain implements SubFilter{
+    private Logger logger = LoggerFactory.getLogger(SubFilterChain.class);
     private Collection<SubFilter> filters;
+    private List<ListenedFilterChangingListener> filterChangingListeners;
 
     public SubFilterChain(Collection<SubFilter> filters) {
         this.filters = filters;
+    }
+    public void registerFilterChangingListener(ListenedFilterChangingListener listenedFilterChangingListener){
+        Assert.notNull(listenedFilterChangingListener,"listenedFilterChangingListener can not be null!");
+        filterChangingListeners = filterChangingListeners == null ? new ArrayList<>() : filterChangingListeners;
+        filterChangingListeners.add(listenedFilterChangingListener);
     }
     @Override
     public boolean doFilter(String eventName) {
@@ -24,5 +37,28 @@ public class SubFilterChain implements SubFilter{
             }
         }
         return true;
+    }
+    //TODO : 过滤规则可热加载
+    public void updateFilters(Collection<SubFilter> filters){
+        this.filters = filters;
+        if (filterChangingListeners != null && filterChangingListeners.size() > 0) {
+            for(ListenedFilterChangingListener filterChangingListener : filterChangingListeners) {
+                try {
+                    filterChangingListener.notifyCausedByFilterChanging();
+                } catch (Exception e) {
+                    logger.error("SubFilterChain.updateFilters error !", e);
+                }
+            }
+        }
+    }
+
+    /**
+     * 过滤器变更监听
+     */
+    public interface ListenedFilterChangingListener{
+        /**
+         * 过滤器规则发生变更的通知
+         */
+        void notifyCausedByFilterChanging();
     }
 }
