@@ -2,11 +2,12 @@ package io.github.eventbus;
 
 import io.github.eventbus.annotation.EnableEventbus;
 import io.github.eventbus.core.EventBusBroadcaster;
-import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Date;
 
 /**
  * @author ALi
@@ -22,9 +23,9 @@ import org.springframework.web.bind.annotation.RestController;
 public class EventBusTest {
     @RequestMapping("/{eventName}")
     public String index(@PathVariable String eventName) {
-        return "broadcast : " + eventName+" , result : "+EventBusBroadcaster.broadcast(eventName);
+        return "broadcast : " + eventName+" , result : "+EventBusBroadcaster.broadcast(eventName,new Date());
     }
     public static void main(String[] args) throws Exception {
-        SpringApplication.run(EventBusTest.class, args);
+        //SpringApplication.run(EventBusTest.class, args);
     }
 }

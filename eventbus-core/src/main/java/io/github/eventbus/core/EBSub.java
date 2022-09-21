@@ -10,9 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
@@ -26,26 +24,34 @@ import java.util.function.Function;
  */
 public class EBSub {
     private Logger logger = LoggerFactory.getLogger(EBSub.class);
-    private EventSource.EventConsumer doNothingHandler = (sourceTerminal, eventName, message) -> {
+    private EventSource.EventConsumer doNothingHandler = (eventSourceName, sourceTerminal, eventName, message) -> {
         if(logger.isDebugEnabled()){
-            logger.debug("EBSub.doNothingHandler consumed event ? from ?", eventName, sourceTerminal);
+            logger.debug("EBSub.doNothingHandler for '" + eventSourceName + "' consumed event '" + eventName + "' from '"+sourceTerminal+"'");
         }
     };
     private Collection<EventSource> sources;
-    private Map<String, EventSource.EventConsumer> consumerMap;
+    private Collection<ListenedEventChangingListener> eventChangingListeners;
+    private final Map<String, EventSource.EventConsumer> consumerMap;
     //封装对consumerMap的操作
     private Function<String, EventSource.EventConsumer> consumerGetter;
     private SubFilterChain subFilterChain;
 
     EBSub(Collection<EventSource> sources, SubFilterChain subFilterChain) {
-        Assert.noNullElements(sources, "the EBSub has no EventSource!");
+        Assert.isTrue(sources != null && sources.size() > 0,"the EBSub has no EventSource!");
         this.sources = sources;
         this.consumerMap = new HashMap<>();
         this.consumerGetter = (eventName) -> consumerMap.getOrDefault(eventName, doNothingHandler);
         this.subFilterChain = subFilterChain;
     }
     void start() throws EventbusException{
+        List<String> listenedEvents = new ArrayList<>(consumerMap.keySet());
         for (EventSource eventSource : sources) {
+            if (eventSource instanceof ListenedEventChangingListener) {
+                eventChangingListeners = eventChangingListeners == null ? new ArrayList<>() : eventChangingListeners;
+                ListenedEventChangingListener listenedEventChangingListener = (ListenedEventChangingListener) eventSource;
+                listenedEventChangingListener.update(listenedEvents);
+                eventChangingListeners.add(listenedEventChangingListener);
+            }
             if (eventSource instanceof AutoConsumeEventSource) {
                 ((AutoConsumeEventSource) eventSource).startConsume(consumerGetter);
             } else if (eventSource instanceof ManualConsumeEventSource) {
@@ -56,7 +62,7 @@ public class EBSub {
         }
     }
     private void startConsume(ManualConsumeEventSource manualConsumeEventSource){
-        MixedActionGenerator.loadAction(manualConsumeEventSource.getName(),manualConsumeEventSource.getConsumeInterval(),TimeUnit.MILLISECONDS,()->{
+        MixedActionGenerator.loadAction(generateActionName(manualConsumeEventSource),manualConsumeEventSource.getConsumeInterval(),TimeUnit.MILLISECONDS,()->{
             try {
                 int consumed = manualConsumeEventSource.consume(consumerGetter);
                 // 如果没消费到消息则暂停x毫秒
@@ -80,12 +86,20 @@ public class EBSub {
                 if (eventSource instanceof AutoConsumeEventSource) {
                     ((AutoConsumeEventSource)eventSource).stopConsume();
                 } else if (eventSource instanceof ManualConsumeEventSource) {
-                    MixedActionGenerator.unloadAction(eventSource.getName(),true);
+                    //由ResourceReleaser来负责最终的释放
+                    MixedActionGenerator.unloadAction(generateActionName(eventSource),false);
                 }
             } catch (Exception e) {
                 logger.error("EBSub stop EventSource named '" + eventSource.getName() + "' error!", e);
             }
         }
+    }
+    private String generateActionName(EventSource eventSource) {
+        return new StringBuilder()
+                .append("Eventbus.EventSource.")
+                .append(eventSource.getName())
+                .append(".consuming")
+                .toString();
     }
     //当设置了uniqueEventHandler后,consumerMap将被忽略,所有事件都由uniqueEventConsumer处理
     void setUniqueEventHandler(EventBusListener.EventHandler uniqueEventHandler){
@@ -96,16 +110,30 @@ public class EBSub {
         Assert.hasLength(eventName, "'eventName' can not be empty.");
         Assert.notNull(eventHandler, "'eventHandler' can not be null.");
         consumerMap.put(eventName, handlerConvertToConsumer(eventHandler));
+        if (eventChangingListeners != null) {
+            List<String> listenedEvents = new ArrayList<>(consumerMap.keySet());
+            eventChangingListeners.stream().forEach((eventChangingListener) -> eventChangingListener.update(listenedEvents));
+        }
     }
     private EventSource.EventConsumer handlerConvertToConsumer(EventBusListener.EventHandler eventHandler){
-        return (sourceTerminal, eventName, message) -> {
+        return (eventSourceName, sourceTerminal, eventName, message) -> {
             if (subFilterChain.doFilter(eventName)) {
                 eventHandler.handle(sourceTerminal, eventName, message);
+                if(logger.isDebugEnabled()){
+                    logger.debug(">>>+++EBSub.EventConsumer for '" + eventSourceName + "' has consumed the event '"+eventName+"' with message '"+message+"' from '"+sourceTerminal+"'");
+                }
             } else {
                 if(logger.isDebugEnabled()){
-                    logger.debug("EBSub.EventConsumer has filtered the event ? from ?", eventName, sourceTerminal);
+                    logger.debug(">>>---EBSub.EventConsumer for '" + eventSourceName + "' has filtered the event '"+eventName+"' with message '"+message+"' from '"+sourceTerminal+"'");
                 }
             }
         };
+    }
+
+    /**
+     * 订阅事件变动监听
+     */
+    public interface ListenedEventChangingListener {
+        void update(List<String> listenedEvents);
     }
 }

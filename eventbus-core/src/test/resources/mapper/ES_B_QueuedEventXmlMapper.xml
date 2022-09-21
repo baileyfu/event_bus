@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.github.eventbus.core.sources.impl.database.dao.mybatis.QueuedEventXmlMapper">
+    <resultMap id="BaseResultMap" type="io.github.eventbus.core.sources.impl.database.model.QueuedEvent">
+        <id column="id" jdbcType="BIGINT" property="id" />
+        <result column="serial_id" jdbcType="VARCHAR" property="serialId" />
+        <result column="name" jdbcType="VARCHAR" property="name" />
+        <result column="message" jdbcType="VARCHAR" property="message" />
+        <result column="message_type" jdbcType="VARCHAR" property="messageType" />
+        <result column="source_terminal" jdbcType="VARCHAR" property="sourceTerminal" />
+        <result column="state" jdbcType="TINYINT" property="state" />
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+    </resultMap>
+    <sql id="Base_Column_List">
+        id, serial_id, name, message, message_type, source_terminal, state, create_time, update_time
+    </sql>
+    <insert id="insert" parameterType="io.github.eventbus.core.sources.impl.database.model.QueuedEvent">
+        <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Long">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        insert into eventbus_queued_event (serial_id, name, message, message_type, source_terminal, state, create_time)
+        values (#{serialId,jdbcType=VARCHAR}, #{name,jdbcType=VARCHAR}, #{message,jdbcType=VARCHAR}, #{messageType,jdbcType=VARCHAR}, #{sourceTerminal,jdbcType=VARCHAR}, #{state,jdbcType=TINYINT}, now())
+    </insert>
+
+    <select id="selectUnconsumedThenUpdateConsumed" resultMap="BaseResultMap">
+        begin;
+        select * from eventbus_queued_event
+        where state=#{state} limit #{limit}
+            for update;
+        update eventbus_queued_event set
+            commit;
+    </select>
+
+    <update id="updateStateToUnconsumed" parameterType="java.lang.Long">
+        update eventbus_queued_event
+        set state = 0
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+</mapper>

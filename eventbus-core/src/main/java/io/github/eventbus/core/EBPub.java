@@ -4,11 +4,15 @@ import io.github.eventbus.core.sources.EventSource;
 import io.github.eventbus.core.sources.route.DefaultPubRouter;
 import io.github.eventbus.core.sources.route.PubRouterChain;
 import io.github.eventbus.exception.EventbusException;
+import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 事件总线-发布器<br/>
@@ -26,8 +30,8 @@ public class EBPub {
     private PubRouterChain pubRouterChain;
 
     EBPub(Collection<EventSource> sources, PubRouterChain pubRouterChain) {
-        Assert.noNullElements(sources, "the EBPub has no EventSource!");
-        this.sources = sources.stream().reduce(new HashMap<String, EventSource>(), (map, es) -> {
+        Assert.isTrue(sources != null && sources.size() > 0,"the EBPub has no EventSource!");
+        this.sources = sources.stream().reduce(new HashMap<>(), (map, es) -> {
             Assert.isTrue(!map.containsKey(es.getName()), "duplicated EventSource name : '" + es.getName() + "'!");
             map.put(es.getName(), es);
             return map;
@@ -45,10 +49,17 @@ public class EBPub {
         Assert.hasLength(eventName, "eventName can not be empty!");
         String[] targetSourceNameArray = pubRouterChain.route(eventName);
         if ((targetSourceNameArray != null && targetSourceNameArray.length > 0)) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("+++>>>EBPub.emit event '"+eventName+"' with message '"+message+"' to '"+Arrays.toString(targetSourceNameArray)+"'");
+            }
             doEmit(eventName, message, targetSourceNameArray == DefaultPubRouter.PUB_TO_ALL ? sourceKeys : targetSourceNameArray);
+        }else{
+            if (logger.isDebugEnabled()) {
+                logger.debug("--->>>EBPub.emit no EventSource matched for event '"+eventName+"' with message '"+message+"'");
+            }
         }
     }
-    private void doEmit(String eventName, Object message,String...sourceNameArray) throws EventbusException {
+    private void doEmit(String eventName, Object message, String...sourceNameArray) throws EventbusException {
         for (String sourceName : sourceNameArray) {
             EventSource eventSource = sources.get(sourceName);
             if (eventSource != null) {

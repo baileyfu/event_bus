@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -11,22 +11,11 @@
 
     <artifactId>eventbus-core</artifactId>
     <version>${eventbus-core.version}</version>
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>9</source>
-                    <target>9</target>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
 
     <properties>
         <fastjson.version>1.2.78</fastjson.version>
         <io.github.commons.version>1.1.0-SNAPSHOT</io.github.commons.version>
+        <mybatis.version>3.5.5</mybatis.version>
     </properties>
 
     <dependencies>
@@ -50,6 +39,12 @@
             <groupId>io.github.ali</groupId>
             <artifactId>commons</artifactId>
             <version>${io.github.commons.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mybatis</groupId>
+            <artifactId>mybatis</artifactId>
+            <version>${mybatis.version}</version>
             <scope>provided</scope>
         </dependency>
 

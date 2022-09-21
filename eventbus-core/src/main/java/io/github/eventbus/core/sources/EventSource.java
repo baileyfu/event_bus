@@ -35,6 +35,14 @@ public interface EventSource {
     int consume(Function<String, EventConsumer> consumerGetter) throws EventbusException;
 
     interface EventConsumer {
-        void accept(Terminal sourceTerminal, String eventName, Object message);
+        /**
+         * 消费失败则抛出异常,事件源回滚事件状态以再次消费(由具体事件源实现决定)
+         * @param eventSourceName
+         * @param sourceTerminal
+         * @param eventName
+         * @param message
+         * @throws Exception
+         */
+        void accept(String eventSourceName, Terminal sourceTerminal, String eventName, Object message) throws Exception;
     }
 }
