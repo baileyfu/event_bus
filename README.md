@@ -1,5 +1,7 @@
 # event_bus
-基于Spring易用的事件收发框架。
+基于Spring易用的事件收发框架，作用如下图所示：
+
+<img src="image/structure.png"/>
 
 ### 一、事件源
 #### 1、SpringEventSource
