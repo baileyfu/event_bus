@@ -45,7 +45,7 @@ CREATE TABLE `eventbus_queued_event` (
 ```
 存储过程DDL：
 ```
-CREATE DEFINER=`root`@`localhost` PROCEDURE `selectUnconsumedThenUpdateConsumedForQueued`(IN eventNames VARCHAR(1000) , v_limit INT)
+CREATE DEFINER=`root`@`localhost` PROCEDURE `selectUnconsumedThenUpdateConsumedForQueued`(IN in_eventNames VARCHAR(1000) , in_limit INT)
 BEGIN
  DECLARE v_id BIGINT DEFAULT 0;
  DECLARE v_serial_id VARCHAR(50) DEFAULT '';
@@ -59,7 +59,7 @@ BEGIN
  DECLARE done INT DEFAULT FALSE;
 
  DECLARE selectUnconsumed CURSOR FOR 
-  select id,serial_id,name,message,message_type,source_terminal,state,create_time,update_time from eventbus_queued_event where state=0 and FIND_IN_SET(e.name,eventNames) limit v_limit for update;
+  select id,serial_id,name,message,message_type,source_terminal,state,create_time,update_time from eventbus_queued_event e where e.state=0 and FIND_IN_SET(e.name,in_eventNames) limit in_limit for update;
  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
  
  CREATE TEMPORARY TABLE if not exists _tmp_eventbus_queued_event_(`id` BIGINT(20),`serial_id` varchar(50),`name` varchar(45),`message` varchar(1000),`message_type` varchar(45),`source_terminal` varchar(300),`state` tinyint(1),`create_time` datetime,`update_time` datetime);   
@@ -71,10 +71,10 @@ BEGIN
    WHILE done IS FALSE DO
     update eventbus_queued_event set state=1,update_time=now() where id=v_id;
     insert into _tmp_eventbus_queued_event_ values(v_id,v_serial_id,v_name,v_message,v_message_type,v_source_terminal,1,v_create_time,now());
-    FETCH selectUnconsumed INTO v_id,v_serial_id,v_name,v_message,v_message_type,v_source_terminal,v_state,v_create_time,v_update_time;
+  FETCH selectUnconsumed INTO v_id,v_serial_id,v_name,v_message,v_message_type,v_source_terminal,v_state,v_create_time,v_update_time;
    END WHILE;
   CLOSE selectUnconsumed;
-  select * from _tmp_eventbus_queued_event_;
+ select * from _tmp_eventbus_queued_event_;
  COMMIT;
 END
 ```
@@ -158,7 +158,7 @@ CREATE TABLE `eventbus_topical_event` (
 
 存储过程DDL：
 ```
-CREATE DEFINER=`root`@`localhost` PROCEDURE `selectUnconsumedThenUpdateConsumedForTopical`(IN terminalId VARCHAR(300) , v_limit INT)
+CREATE DEFINER=`root`@`localhost` PROCEDURE `selectUnconsumedThenUpdateConsumedForTopical`(IN in_terminalId VARCHAR(300) , in_limit INT)
 BEGIN
  DECLARE v_id BIGINT DEFAULT 0;
  DECLARE v_terminal_id VARCHAR(300) DEFAULT '';
@@ -173,7 +173,7 @@ BEGIN
  DECLARE done INT DEFAULT FALSE;
 
  DECLARE selectUnconsumed CURSOR FOR 
-  select id,terminal_id,serial_id,name,message,message_type,source_terminal,state,create_time,update_time from eventbus_topical_event e where e.state = 0 and terminal_id = terminalId limit v_limit for update;
+  select id,terminal_id,serial_id,name,message,message_type,source_terminal,state,create_time,update_time from eventbus_topical_event e where e.state = 0 and terminal_id = in_terminalId limit in_limit for update;
  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
  
  CREATE TEMPORARY TABLE if not exists _tmp_eventbus_topical_event_(`id` BIGINT(20),`terminal_id` varchar(300),`serial_id` varchar(50),`name` varchar(45),`message` varchar(1000),`message_type` varchar(45),`source_terminal` varchar(300),`state` tinyint(1),`create_time` datetime,`update_time` datetime);   
