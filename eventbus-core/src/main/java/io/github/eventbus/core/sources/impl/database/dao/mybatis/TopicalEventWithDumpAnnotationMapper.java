@@ -20,7 +20,7 @@ public interface TopicalEventWithDumpAnnotationMapper extends TopicalEventDAO {
     @Override
     int insert(TopicalEvent topicalEvent);
 
-    @Select("{CALL selectUnconsumedThenUpdateConsumedForTopical(#{terminalId,mode=IN,jdbcType=VARCHAR},#{limit,mode=IN,jdbcType=BIT})}")
+    @Select("{CALL eventbusSelectUnconsumedThenUpdateConsumedForTopical(#{terminalId,mode=IN,jdbcType=VARCHAR},#{limit,mode=IN,jdbcType=BIT})}")
     @Options(useCache = false, statementType = StatementType.CALLABLE)
     @Override
     List<TopicalEvent> selectUnconsumedThenUpdateConsumed(@Param("terminalId") String terminalId,@Param("limit") int limit);
@@ -34,7 +34,7 @@ public interface TopicalEventWithDumpAnnotationMapper extends TopicalEventDAO {
      * 转储被消费时间超过x小时的事件
      * @return
      */
-    @Select("{CALL dumpConsumedForTopical(#{terminalId,mode=IN,jdbcType=VARCHAR},#{cycleHours,mode=IN,jdbcType=BIT})}")
+    @Select("{CALL eventbusDumpConsumedForTopical(#{terminalId,mode=IN,jdbcType=VARCHAR},#{cycleHours,mode=IN,jdbcType=BIT})}")
     @Options(useCache = false, statementType = StatementType.CALLABLE)
     @Override
     int cleanConsumed(@Param("terminalId") String terminalId, @Param("cycleHours") int cycleHours);

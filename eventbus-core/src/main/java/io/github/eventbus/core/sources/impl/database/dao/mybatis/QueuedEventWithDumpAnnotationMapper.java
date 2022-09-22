@@ -20,7 +20,7 @@ public interface QueuedEventWithDumpAnnotationMapper extends QueuedEventDAO {
     @Override
     int insert(QueuedEvent queuedEvent);
 
-    @Select("{CALL selectUnconsumedThenUpdateConsumedForQueued(#{eventNames,mode=IN,jdbcType=VARCHAR},#{limit,mode=IN,jdbcType=BIT})}")
+    @Select("{CALL eventbusSelectUnconsumedThenUpdateConsumedForQueued(#{eventNames,mode=IN,jdbcType=VARCHAR},#{limit,mode=IN,jdbcType=BIT})}")
     @Options(useCache = false, statementType = StatementType.CALLABLE)
     @Override
     List<QueuedEvent> selectUnconsumedThenUpdateConsumed(@Param("eventNames") String eventNames,@Param("limit") int limit);
@@ -35,7 +35,7 @@ public interface QueuedEventWithDumpAnnotationMapper extends QueuedEventDAO {
      * 转储表默认为eventbus_queued_event_dumped
      * @return
      */
-    @Select("{CALL dumpConsumedForQueued(#{eventNames,mode=IN,jdbcType=VARCHAR},#{cycleHours,mode=IN,jdbcType=BIT})}")
+    @Select("{CALL eventbusDumpConsumedForQueued(#{eventNames,mode=IN,jdbcType=VARCHAR},#{cycleHours,mode=IN,jdbcType=BIT})}")
     @Options(useCache = false, statementType = StatementType.CALLABLE)
     @Override
     int cleanConsumed(@Param("eventNames") String eventNames, @Param("cycleHours") int cycleHours);

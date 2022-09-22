@@ -20,7 +20,7 @@ public interface QueuedEventAnnotationMapper extends QueuedEventDAO {
     @Override
     int insert(QueuedEvent queuedEvent);
 
-    @Select("{CALL selectUnconsumedThenUpdateConsumedForQueued(#{eventNames,mode=IN,jdbcType=VARCHAR},#{limit,mode=IN,jdbcType=BIT})}")
+    @Select("{CALL eventbusSelectUnconsumedThenUpdateConsumedForQueued(#{eventNames,mode=IN,jdbcType=VARCHAR},#{limit,mode=IN,jdbcType=BIT})}")
     @Options(useCache = false, statementType = StatementType.CALLABLE)
     @Override
     List<QueuedEvent> selectUnconsumedThenUpdateConsumed(@Param("eventNames") String eventNames,@Param("limit") int limit);

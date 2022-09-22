@@ -45,7 +45,7 @@ CREATE TABLE `eventbus_queued_event` (
 ```
 存储过程DDL：
 ```
-CREATE DEFINER=`root`@`localhost` PROCEDURE `selectUnconsumedThenUpdateConsumedForQueued`(IN in_eventNames VARCHAR(1000) , in_limit INT)
+CREATE DEFINER=`root`@`localhost` PROCEDURE `eventbusSelectUnconsumedThenUpdateConsumedForQueued`(IN in_eventNames VARCHAR(1000) , in_limit INT)
 BEGIN
  DECLARE v_id BIGINT DEFAULT 0;
  DECLARE v_serial_id VARCHAR(50) DEFAULT '';
@@ -84,7 +84,7 @@ END
 
 存储过程DDL：
 ```
-CREATE DEFINER=`root`@`localhost` PROCEDURE `dumpConsumedForQueued`(IN in_eventNames VARCHAR(1000) , in_cycleHours INT)
+CREATE DEFINER=`root`@`localhost` PROCEDURE `eventbusDumpConsumedForQueued`(IN in_eventNames VARCHAR(1000) , in_cycleHours INT)
 BEGIN
  DECLARE v_id BIGINT DEFAULT 0;
  DECLARE v_serial_id VARCHAR(50) DEFAULT '';
@@ -158,7 +158,7 @@ CREATE TABLE `eventbus_topical_event` (
 
 存储过程DDL：
 ```
-CREATE DEFINER=`root`@`localhost` PROCEDURE `selectUnconsumedThenUpdateConsumedForTopical`(IN in_terminalId VARCHAR(300) , in_limit INT)
+CREATE DEFINER=`root`@`localhost` PROCEDURE `eventbusSelectUnconsumedThenUpdateConsumedForTopical`(IN in_terminalId VARCHAR(300) , in_limit INT)
 BEGIN
  DECLARE v_id BIGINT DEFAULT 0;
  DECLARE v_terminal_id VARCHAR(300) DEFAULT '';
@@ -216,7 +216,7 @@ TopicalEventAnnotationMapper，只是清理方法为转储。
 
 存储过程DDL：
 ```
-CREATE DEFINER=`root`@`localhost` PROCEDURE `dumpConsumedForTopical`(IN in_terminalId VARCHAR(1000) , in_cycleHours INT)
+CREATE DEFINER=`root`@`localhost` PROCEDURE `eventbusDumpConsumedForTopical`(IN in_terminalId VARCHAR(1000) , in_cycleHours INT)
 BEGIN
  DECLARE v_id BIGINT DEFAULT 0;
  DECLARE v_terminal_id VARCHAR(300) DEFAULT '';
