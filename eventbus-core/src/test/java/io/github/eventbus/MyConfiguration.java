@@ -50,7 +50,7 @@ public class MyConfiguration {
                 return 1;
             }
             @Override
-            public int cleanConsumed(int cycleHours) {
+            public int cleanConsumed(String eventNames, int cycleHours) {
                 return 0;
             }
         });

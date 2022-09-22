@@ -88,7 +88,9 @@ public class DatabaseQueueEventSource extends AbstractDatabaseEventSource implem
 
     @Override
     protected void clean() throws Exception {
-        queuedEventDAO.cleanConsumed(cleanCycle);
+        if (listenedEvents != null) {
+            queuedEventDAO.cleanConsumed(listenedEvents, cleanCycle);
+        }
     }
 
     @Override

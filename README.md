@@ -22,7 +22,7 @@ B、SqlSessionFactoryBean中typeAliasesPackage属性增加io.github.eventbus.cor
 
 C、若选择QueuedEventXmlMapper则将对应的mapper.xml文件加入SqlSessionFactoryBean的mapperLocations属性；
 
-##### 两种Mapper接口：
+##### Mapper接口：
 
 ###### QueuedEventAnnotationMapper：
 基于注解形式实现，相关表和操作的SQL已经定义好，可直接使用。
@@ -75,6 +75,46 @@ BEGIN
    END WHILE;
   CLOSE selectUnconsumed;
   select * from _tmp_eventbus_queued_event_;
+ COMMIT;
+END
+```
+
+###### QueuedEventWithDumpAnnotationMapper：
+功能同QueuedEventAnnotationMapper，只是清理方法为转储。
+
+存储过程DDL：
+```
+CREATE DEFINER=`root`@`localhost` PROCEDURE `dumpConsumedForQueued`(IN in_eventNames VARCHAR(1000) , in_cycleHours INT)
+BEGIN
+ DECLARE v_id BIGINT DEFAULT 0;
+ DECLARE v_serial_id VARCHAR(50) DEFAULT '';
+ DECLARE v_name VARCHAR(45) DEFAULT '';
+ DECLARE v_message VARCHAR(1000) DEFAULT '';
+ DECLARE v_message_type VARCHAR(45) DEFAULT '';
+ DECLARE v_source_terminal VARCHAR(300) DEFAULT '';
+ DECLARE v_state TINYINT(1) DEFAULT 0;
+ DECLARE v_create_time DATETIME DEFAULT NULL;
+ DECLARE v_update_time DATETIME DEFAULT NULL;
+ DECLARE counter INT DEFAULT 0;
+ DECLARE done INT DEFAULT FALSE;
+
+ DECLARE selectConsumed CURSOR FOR 
+  select id,serial_id,name,message,message_type,source_terminal,state,create_time,update_time from eventbus_queued_event e where e.state=1 and FIND_IN_SET(e.name,in_eventNames) and DATE_ADD(create_time,INTERVAL in_cycleHours HOUR) < now() for update;
+ DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+ 
+ CREATE TABLE if not exists eventbus_queued_event_dumped(`id` BIGINT(20),`serial_id` varchar(50),`name` varchar(45),`message` varchar(1000),`message_type` varchar(45),`source_terminal` varchar(300),`state` tinyint(1),`create_time` datetime,`update_time` datetime);   
+ 
+ SET autocommit = 0;
+  OPEN selectConsumed;
+   FETCH selectConsumed INTO v_id,v_serial_id,v_name,v_message,v_message_type,v_source_terminal,v_state,v_create_time,v_update_time;
+   WHILE done IS FALSE DO
+    delete from eventbus_queued_event where id=v_id;
+    insert into eventbus_queued_event_dumped values(v_id,v_serial_id,v_name,v_message,v_message_type,v_source_terminal,1,v_create_time,now());
+	SET counter=counter+1;
+  FETCH selectConsumed INTO v_id,v_serial_id,v_name,v_message,v_message_type,v_source_terminal,v_state,v_create_time,v_update_time;
+   END WHILE;
+  CLOSE selectConsumed;
+ select counter;
  COMMIT;
 END
 ```
@@ -169,6 +209,47 @@ CREATE TABLE `eventbus_topical_event_terminal` (
   UNIQUE KEY `sourceName&terminalId_UNIQUE` (`event_source_name`,`terminal_id`),
   KEY `sourceName_INDEX` (`event_source_name`)
 ) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+```
+
+###### TopicalEventWithDumpAnnotationMapper：
+TopicalEventAnnotationMapper，只是清理方法为转储。
+
+存储过程DDL：
+```
+CREATE DEFINER=`root`@`localhost` PROCEDURE `dumpConsumedForTopical`(IN in_terminalId VARCHAR(1000) , in_cycleHours INT)
+BEGIN
+ DECLARE v_id BIGINT DEFAULT 0;
+ DECLARE v_terminal_id VARCHAR(300) DEFAULT '';
+ DECLARE v_serial_id VARCHAR(50) DEFAULT '';
+ DECLARE v_name VARCHAR(45) DEFAULT '';
+ DECLARE v_message VARCHAR(1000) DEFAULT '';
+ DECLARE v_message_type VARCHAR(45) DEFAULT '';
+ DECLARE v_source_terminal VARCHAR(300) DEFAULT '';
+ DECLARE v_state TINYINT(1) DEFAULT 0;
+ DECLARE v_create_time DATETIME DEFAULT NULL;
+ DECLARE v_update_time DATETIME DEFAULT NULL;
+ DECLARE counter INT DEFAULT 0;
+ DECLARE done INT DEFAULT FALSE;
+
+ DECLARE selectConsumed CURSOR FOR 
+  select id,terminal_id,serial_id,name,message,message_type,source_terminal,state,create_time,update_time from eventbus_topical_event e where e.state = 1 and terminal_id = in_terminalId and DATE_ADD(create_time,INTERVAL in_cycleHours HOUR) < now() for update;
+ DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+ 
+ CREATE TABLE if not exists eventbus_topical_event_dumped(`id` BIGINT(20),`terminal_id` varchar(300),`serial_id` varchar(50),`name` varchar(45),`message` varchar(1000),`message_type` varchar(45),`source_terminal` varchar(300),`state` tinyint(1),`create_time` datetime,`update_time` datetime);   
+ 
+ SET autocommit = 0;
+  OPEN selectConsumed;
+   FETCH selectConsumed INTO v_id,v_terminal_id,v_serial_id,v_name,v_message,v_message_type,v_source_terminal,v_state,v_create_time,v_update_time;
+   WHILE done IS FALSE DO
+    delete from eventbus_topical_event where id=v_id;
+    insert into eventbus_topical_event_dumped values(v_id,v_terminal_id,v_serial_id,v_name,v_message,v_message_type,v_source_terminal,1,v_create_time,now());
+	SET counter=counter+1;
+  FETCH selectConsumed INTO v_id,v_terminal_id,v_serial_id,v_name,v_message,v_message_type,v_source_terminal,v_state,v_create_time,v_update_time;
+   END WHILE;
+  CLOSE selectConsumed;
+ select counter;
+ COMMIT;
+END
 ```
 
 ### 注意事项

@@ -14,7 +14,7 @@ import java.util.List;
  * @date 2022-09-07 17:07
  * @description
  */
-public interface QueuedEventAnnotationMapper extends QueuedEventDAO {
+public interface QueuedEventWithDumpAnnotationMapper extends QueuedEventDAO {
     @Insert("insert into eventbus_queued_event(serial_id,name,message,message_type,source_terminal,state,create_time) values(#{serialId},#{name},#{message},#{messageType},#{sourceTerminal}," + QueuedEvent.STATE_UNCONSUMED + ",now())")
     @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
     @Override
@@ -31,11 +31,12 @@ public interface QueuedEventAnnotationMapper extends QueuedEventDAO {
     int updateStateToUnconsumed(@Param("id") long id);
 
     /**
-     * 直接删除被消费时间超过x小时的事件
+     * 转储被消费时间超过x小时的事件<br/>
+     * 转储表默认为eventbus_queued_event_dumped
      * @return
      */
-    @Delete("delete from eventbus_queued_event where state = " + QueuedEvent.STATE_CONSUMED + " and name in #{eventNames} and DATE_ADD(create_time,INTERVAL ${cycleHours} HOUR) < now()")
-    @Options(useCache = false)
+    @Select("{CALL dumpConsumedForQueued(#{eventNames,mode=IN,jdbcType=VARCHAR},#{cycleHours,mode=IN,jdbcType=BIT})}")
+    @Options(useCache = false, statementType = StatementType.CALLABLE)
     @Override
     int cleanConsumed(@Param("eventNames") String eventNames, @Param("cycleHours") int cycleHours);
 }

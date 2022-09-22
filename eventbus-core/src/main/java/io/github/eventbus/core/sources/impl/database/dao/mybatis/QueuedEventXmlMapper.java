@@ -27,5 +27,5 @@ public interface QueuedEventXmlMapper extends QueuedEventDAO {
     @Override
     List<QueuedEvent> selectUnconsumedThenUpdateConsumed(String eventNames, int limit);
     @Override
-    int cleanConsumed(int cycleHours);
+    int cleanConsumed(String eventNames, int cycleHours);
 }

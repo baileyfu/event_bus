@@ -37,8 +37,9 @@ public interface QueuedEventDAO {
     /**
      * 清除已消费事件<br/>
      * 可自定义直接清除或转储
+     * @param eventNames
      * @param cycleHours
      * @return
      */
-    int cleanConsumed(int cycleHours);
+    int cleanConsumed(String eventNames, int cycleHours);
 }
