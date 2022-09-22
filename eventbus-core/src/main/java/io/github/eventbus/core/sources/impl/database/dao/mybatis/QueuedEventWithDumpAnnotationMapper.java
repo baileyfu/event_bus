@@ -16,7 +16,7 @@ import java.util.List;
  */
 public interface QueuedEventWithDumpAnnotationMapper extends QueuedEventDAO {
     @Insert("insert into eventbus_queued_event(serial_id,name,message,message_type,source_terminal,state,create_time) values(#{serialId},#{name},#{message},#{messageType},#{sourceTerminal}," + QueuedEvent.STATE_UNCONSUMED + ",now())")
-    @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
+    @Options(useCache = false, useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
     @Override
     int insert(QueuedEvent queuedEvent);
 

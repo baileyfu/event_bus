@@ -64,7 +64,7 @@ BEGIN
  
  CREATE TEMPORARY TABLE if not exists _tmp_eventbus_queued_event_(`id` BIGINT(20),`serial_id` varchar(50),`name` varchar(45),`message` varchar(1000),`message_type` varchar(45),`source_terminal` varchar(300),`state` tinyint(1),`create_time` datetime,`update_time` datetime);   
  
- SET autocommit = 0;
+ START TRANSACTION;
   OPEN selectUnconsumed;
   TRUNCATE TABLE _tmp_eventbus_queued_event_;
    FETCH selectUnconsumed INTO v_id,v_serial_id,v_name,v_message,v_message_type,v_source_terminal,v_state,v_create_time,v_update_time;
@@ -104,7 +104,7 @@ BEGIN
  
  CREATE TABLE if not exists eventbus_queued_event_dumped(`id` BIGINT(20),`serial_id` varchar(50),`name` varchar(45),`message` varchar(1000),`message_type` varchar(45),`source_terminal` varchar(300),`state` tinyint(1),`create_time` datetime,`update_time` datetime);   
  
- SET autocommit = 0;
+ START TRANSACTION;
   OPEN selectConsumed;
    FETCH selectConsumed INTO v_id,v_serial_id,v_name,v_message,v_message_type,v_source_terminal,v_state,v_create_time,v_update_time;
    WHILE done IS FALSE DO
@@ -178,7 +178,7 @@ BEGIN
  
  CREATE TEMPORARY TABLE if not exists _tmp_eventbus_topical_event_(`id` BIGINT(20),`terminal_id` varchar(300),`serial_id` varchar(50),`name` varchar(45),`message` varchar(1000),`message_type` varchar(45),`source_terminal` varchar(300),`state` tinyint(1),`create_time` datetime,`update_time` datetime);   
  
- SET autocommit = 0;
+ START TRANSACTION;
   OPEN selectUnconsumed;
   TRUNCATE TABLE _tmp_eventbus_topical_event_;
    FETCH selectUnconsumed INTO v_id,v_terminal_id,v_serial_id,v_name,v_message,v_message_type,v_source_terminal,v_state,v_create_time,v_update_time;
@@ -237,7 +237,7 @@ BEGIN
  
  CREATE TABLE if not exists eventbus_topical_event_dumped(`id` BIGINT(20),`terminal_id` varchar(300),`serial_id` varchar(50),`name` varchar(45),`message` varchar(1000),`message_type` varchar(45),`source_terminal` varchar(300),`state` tinyint(1),`create_time` datetime,`update_time` datetime);   
  
- SET autocommit = 0;
+ START TRANSACTION;
   OPEN selectConsumed;
    FETCH selectConsumed INTO v_id,v_terminal_id,v_serial_id,v_name,v_message,v_message_type,v_source_terminal,v_state,v_create_time,v_update_time;
    WHILE done IS FALSE DO
