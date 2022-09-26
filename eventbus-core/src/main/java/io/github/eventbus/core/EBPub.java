@@ -65,7 +65,7 @@ public class EBPub {
                 eventSource.push(eventName, message);
                 continue;
             }
-            logger.warn("No EventSource with the name '?' be found!", sourceName);
+            logger.warn("No EventSource with the name '" + sourceName + "' be found for emitting '" + eventName + "'!");
         }
     }
 }

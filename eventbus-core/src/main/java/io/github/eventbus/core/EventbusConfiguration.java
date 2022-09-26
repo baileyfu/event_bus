@@ -37,8 +37,8 @@ public class EventbusConfiguration{
         PubRouterChain pubRouterChain = new PubRouterChain(prMap == null ? null : prMap.values());
         EBPub ebpub = new EBPub(esMap == null ? null : esMap.values(), pubRouterChain);
 
-        boolean open = environment.getProperty(EventbusConfigConst.OPEN,Boolean.class,false);
-        boolean bctOpen = environment.getProperty(EventbusConfigConst.BCT_OPEN,Boolean.class,false);
+        boolean open = environment.getProperty(EventbusConfigConst.OPEN,Boolean.class,true);
+        boolean bctOpen = environment.getProperty(EventbusConfigConst.BCT_OPEN,Boolean.class,true);
         return new EventBusBroadcaster(ebpub, open && bctOpen);
     }
     @Bean
@@ -49,8 +49,8 @@ public class EventbusConfiguration{
         EBSub ebsub = new EBSub(esMap == null ? null : esMap.values(), subFilterChain);
 
         Map<String, EventBusListener.EventHandler> handlerMap = applicationContext.getBeansOfType(EventBusListener.EventHandler.class);
-        boolean open = environment.getProperty(EventbusConfigConst.OPEN,Boolean.class,false);
-        boolean lsnOpen = environment.getProperty(EventbusConfigConst.LSN_OPEN,Boolean.class,false);
+        boolean open = environment.getProperty(EventbusConfigConst.OPEN,Boolean.class,true);
+        boolean lsnOpen = environment.getProperty(EventbusConfigConst.LSN_OPEN,Boolean.class,true);
         return new EventBusListener(ebsub, handlerMap == null ? null : handlerMap.values(), open && lsnOpen);
     }
     @Bean

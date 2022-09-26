@@ -1,0 +1,33 @@
+### Eventbus
+eventbus:
+  #总开关
+  open: true
+  #广播开关
+  broadcast:
+    open: true
+  #监听开关
+  listen:
+    open: true
+  ### 当前节点配置
+  terminal:
+    name: serverName
+    ip: 127.0.0.1
+    port: 8080
+  source:
+    consume:
+      limit: 5 #每次消费5个事件
+    manual:
+      consumeInterval: 1000 #每1秒消费一次
+      database:
+        clean:
+          required: true
+          cycle: 1 #已消费事件1小时后转储
+        topic:
+          inactivate:
+            required: true
+            cycle: 24 #节点24小时未激活则将其置为失活
+### Logging
+logging:
+  level:
+    io.github.eventbus: debug
+debug: true

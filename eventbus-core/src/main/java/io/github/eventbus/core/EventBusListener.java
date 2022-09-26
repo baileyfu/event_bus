@@ -1,5 +1,6 @@
 package io.github.eventbus.core;
 
+import io.github.ali.commons.function.ThrConsumer;
 import io.github.eventbus.core.monitor.ResourceMonitor;
 import io.github.eventbus.core.terminal.Terminal;
 import io.github.eventbus.exception.EventbusException;
@@ -67,6 +68,33 @@ public class EventBusListener{
         }
     }
 
+    /**
+     * 监听事件
+     * @param eventName
+     * @param consumer
+     */
+    public static void listen(String eventName, ThrConsumer<Terminal, String, Object> consumer){
+        listen(new EventHandler() {
+            @Override
+            public String targetEventName() {
+                return eventName;
+            }
+
+            @Override
+            public void handle(Terminal sourceTerminal, String eventName, Object message) {
+                try {
+                    consumer.accept(sourceTerminal, eventName, message);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+    }
+
+    /**
+     * 监听事件
+     * @param handler
+     */
     public static void listen(EventHandler handler) {
         String eventName = handler.targetEventName();
         if (INSTANCE == null || INSTANCE.ebsub == null) {

@@ -10,6 +10,7 @@
     <modules>
         <module>eventbus-core</module>
         <module>eventbus-starter</module>
+        <module>examples</module>
     </modules>
     <packaging>pom</packaging>
 
@@ -22,6 +23,7 @@
         <eventbus-core.version>1.0.0-SNAPSHOT</eventbus-core.version>
         <eventbus-starter.version>1.0.0-SNAPSHOT</eventbus-starter.version>
         <spring-boot.version>2.5.3</spring-boot.version>
+        <io.github.commons.version>1.1.0-SNAPSHOT</io.github.commons.version>
     </properties>
 
     <dependencyManagement>
@@ -41,6 +43,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.github.ali</groupId>
+            <artifactId>commons</artifactId>
+            <version>${io.github.commons.version}</version>
         </dependency>
     </dependencies>
 
