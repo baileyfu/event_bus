@@ -91,7 +91,7 @@ public abstract class AbstractDatabaseEventSource extends ManualConsumeEventSour
     }
 
     @Override
-    public int consume(Function<String, EventConsumer> consumerGetter) throws EventbusException {
+    public int doConsume(Function<String, EventConsumer> consumerGetter) throws EventbusException {
         int consumedCount = 0;
         try{
             Map<Long, Event> waitingEvents = fetchAndSetUnconsumed();

@@ -27,12 +27,17 @@ public interface EventSource {
     void push(String eventName, Object message) throws EventbusException;
 
     /**
-     * 事件处理,调用者应处理此方法可能抛出的异常
+     * 开启事件处理
      * @param consumerGetter
      * @return
      * @throws EventbusException
      */
-    int consume(Function<String, EventConsumer> consumerGetter) throws EventbusException;
+    void consume(Function<String, EventConsumer> consumerGetter) throws EventbusException;
+
+    /**
+     * 事件源停机
+     */
+    void halt() ;
 
     interface EventConsumer {
         /**

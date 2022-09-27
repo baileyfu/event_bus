@@ -1,9 +1,14 @@
 package io.github.eventbus.core.sources;
 
+import io.github.ali.commons.variable.MixedActionGenerator;
 import io.github.eventbus.constants.EventSourceConfigConst;
+import io.github.eventbus.exception.EventbusException;
+
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 /**
- * 手动消费,由EBSub负责拉取
+ * 手动消费,利用MixedActionGenerator定时拉取
  * @author ALi
  * @version 1.0
  * @date 2022-09-05 09:36
@@ -42,13 +47,7 @@ public abstract class ManualConsumeEventSource extends AbstractEventSource{
             logger.warn(EventSourceConfigConst.MANUAL_CONSUME_INTERVAL + " value is " + consumeInterval + " , reset to " + DEFAULT_CONSUME_INTERVAL);
         }
     }
-    public long getConsumeInterval(){
-        return consumeInterval;
-    }
 
-    public long gePauseIfNotConsumed(){
-        return pauseIfNotConsumed;
-    }
     public void setPauseIfNotConsumed(long pauseIfNotConsumed) {
         this.pauseIfNotConsumed = pauseIfNotConsumed;
         if (this.pauseIfNotConsumed < MIN_CONSUME_PAUSE) {
@@ -56,4 +55,39 @@ public abstract class ManualConsumeEventSource extends AbstractEventSource{
             logger.warn(EventSourceConfigConst.MANUAL_PAUSE_IF_NOT_CONSUMED + " value is " + pauseIfNotConsumed + " , reset to " + DEFAULT_CONSUME_PAUSE);
         }
     }
+
+    @Override
+    protected void startConsume(Function<String, EventConsumer> consumerGetter) {
+        MixedActionGenerator.loadAction(generateActionName(),consumeInterval, TimeUnit.MILLISECONDS,()->{
+            try {
+                int consumed = doConsume(consumerGetter);
+                // 如果没消费到消息则暂停x毫秒
+                if (pauseIfNotConsumed > 0 && consumed == 0) {
+                    Thread.sleep(pauseIfNotConsumed);
+                }
+            } catch (Exception e) {
+                logger.error(getName() + " consume error !", e);
+                // 消费出错后暂停100ms
+                try {
+                    Thread.sleep(100l);
+                } catch (InterruptedException ie) {
+                    logger.error(getName() + " sleeping after consuming failed error !", ie);
+                }
+            }
+        });
+    }
+
+    @Override
+    protected void stopConsume() {
+        //由ResourceReleaser来负责最终的释放
+        MixedActionGenerator.unloadAction(generateActionName(),false);
+    }
+    private String generateActionName() {
+        return new StringBuilder()
+                .append("Eventbus.EventSource.")
+                .append(getName())
+                .append(".consuming")
+                .toString();
+    }
+    abstract protected int doConsume(Function<String, EventConsumer> consumerGetter) throws EventbusException;
 }

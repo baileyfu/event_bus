@@ -12,6 +12,8 @@ import org.springframework.context.EnvironmentAware;
 import org.springframework.core.env.Environment;
 import org.springframework.util.Assert;
 
+import java.util.function.Function;
+
 
 /**
  * 事件序列化默认是JSONEventSerializer
@@ -30,6 +32,8 @@ public abstract class AbstractEventSource implements EventSource, InitializingBe
     //单次消费数量
     protected int consumeLimit;
     private String name;
+    private boolean isMarching;
+    private boolean isConsuming;
     protected Terminal currentTerminal;
 
     public AbstractEventSource(String name) {
@@ -53,6 +57,8 @@ public abstract class AbstractEventSource implements EventSource, InitializingBe
         }
         eventSerializer = eventSerializer == null ? JSONEventSerializer.getInstance() : eventSerializer;
         currentTerminal = TerminalFactory.create();
+        isMarching = true;
+        isConsuming = false;
     }
     public void setConsumeLimit(int consumeLimit) {
         this.consumeLimit = consumeLimit;
@@ -68,6 +74,9 @@ public abstract class AbstractEventSource implements EventSource, InitializingBe
 
     @Override
     public void push(String eventName, Object message) throws EventbusException {
+        if (!isMarching) {
+            throw new EventbusException("EventSource " + name + " is halted!");
+        }
         Event event = Event.EventBuilder.newInstance()
                 .name(eventName)
                 .message(message)
@@ -80,4 +89,43 @@ public abstract class AbstractEventSource implements EventSource, InitializingBe
         }
     }
     abstract protected void save(Event event) throws Exception;
+
+    @Override
+    public void consume(Function<String, EventConsumer> consumerGetter) throws EventbusException {
+        if (!isMarching) {
+            throw new EventbusException("EventSource " + name + " is halted!");
+        }
+        synchronized (this) {
+            if (!isConsuming) {
+                try {
+                    startConsume(consumerGetter);
+                    isConsuming = true;
+                } catch (Exception e) {
+                    throw new EventbusException("EventSource consume error!", e);
+                }
+            }
+        }
+    }
+    @Override
+    public void halt() {
+        if (!isMarching) {
+            logger.warn("EventSource " + name + " is already halted , call halt() will be ignored.");
+        } else {
+            synchronized (this) {
+                try {
+                    stopConsume();
+                    isConsuming = false;
+                    isMarching = false;
+                } catch (Exception e) {
+                    logger.error("EventSource halt error!", e);
+                }
+            }
+        }
+    }
+    /**
+     * 启动消费,需对事件消费的异常进行处理以防止中断消费线程
+     * @param consumerGetter
+     */
+    abstract protected void startConsume(Function<String, EventConsumer> consumerGetter);
+    abstract protected void stopConsume();
 }

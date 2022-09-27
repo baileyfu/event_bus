@@ -1,9 +1,6 @@
 package io.github.eventbus.core;
 
-import io.github.ali.commons.variable.MixedActionGenerator;
-import io.github.eventbus.core.sources.AutoConsumeEventSource;
 import io.github.eventbus.core.sources.EventSource;
-import io.github.eventbus.core.sources.ManualConsumeEventSource;
 import io.github.eventbus.core.sources.filter.SubFilterChain;
 import io.github.eventbus.exception.EventbusException;
 import org.slf4j.Logger;
@@ -11,7 +8,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 /**
@@ -66,55 +62,18 @@ public class EBSub implements SubFilterChain.ListenedFilterChangingListener {
                 eventChangingListeners = eventChangingListeners == null ? new ArrayList<>() : eventChangingListeners;
                 eventChangingListeners.add((ListenedEventChangingListener) eventSource);
             }
-            if (eventSource instanceof AutoConsumeEventSource) {
-                ((AutoConsumeEventSource) eventSource).startConsume(consumerGetter);
-            } else if (eventSource instanceof ManualConsumeEventSource) {
-                startConsume((ManualConsumeEventSource) eventSource);
-            } else {
-                throw new EventbusException(String.format("No supported EventSource type '%s' , the EventSource must extends from ManualConsumeEventSource.class or AutoConsumeEventSource.class",eventSource.getClass()));
-            }
+            eventSource.consume(consumerGetter);
         }
         invokeListenedEventChangingListener();
-    }
-    private void startConsume(ManualConsumeEventSource manualConsumeEventSource){
-        MixedActionGenerator.loadAction(generateActionName(manualConsumeEventSource),manualConsumeEventSource.getConsumeInterval(),TimeUnit.MILLISECONDS,()->{
-            try {
-                int consumed = manualConsumeEventSource.consume(consumerGetter);
-                // 如果没消费到消息则暂停x毫秒
-                if (manualConsumeEventSource.gePauseIfNotConsumed() > 0 && consumed == 0) {
-                    Thread.sleep(manualConsumeEventSource.gePauseIfNotConsumed());
-                }
-            } catch (Exception e) {
-                logger.error(manualConsumeEventSource.getName() + " consume error !", e);
-                // 消费出错后暂停100ms
-                try {
-                    Thread.sleep(100l);
-                } catch (InterruptedException ie) {
-                    logger.error(manualConsumeEventSource.getName() + " sleeping after consuming failed error !", ie);
-                }
-            }
-        });
     }
     void stop(){
         for (EventSource eventSource : sources) {
             try {
-                if (eventSource instanceof AutoConsumeEventSource) {
-                    ((AutoConsumeEventSource)eventSource).stopConsume();
-                } else if (eventSource instanceof ManualConsumeEventSource) {
-                    //由ResourceReleaser来负责最终的释放
-                    MixedActionGenerator.unloadAction(generateActionName(eventSource),false);
-                }
+                eventSource.halt();
             } catch (Exception e) {
                 logger.error("EBSub stop EventSource named '" + eventSource.getName() + "' error!", e);
             }
         }
-    }
-    private String generateActionName(EventSource eventSource) {
-        return new StringBuilder()
-                .append("Eventbus.EventSource.")
-                .append(eventSource.getName())
-                .append(".consuming")
-                .toString();
     }
     //当设置了uniqueEventHandler后,consumerMap将被忽略,所有事件都由uniqueEventConsumer处理
     void setUniqueEventHandler(EventBusListener.EventHandler uniqueEventHandler){
