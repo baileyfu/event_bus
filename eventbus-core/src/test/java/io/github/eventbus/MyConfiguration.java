@@ -39,7 +39,7 @@ public class MyConfiguration {
                 return 1;
             }
             @Override
-            public List<QueuedEvent> selectUnconsumedThenUpdateConsumed(String eventNames, int limit) {
+            public List<QueuedEvent> selectUnconsumedThenUpdateConsumed(String eventNames, int limit,String targetTerminal) {
                 List<QueuedEvent> list = this.list;
                 this.list = new ArrayList<>();
                 return list;

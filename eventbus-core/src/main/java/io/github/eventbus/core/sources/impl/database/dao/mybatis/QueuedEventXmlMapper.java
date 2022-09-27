@@ -3,6 +3,7 @@ package io.github.eventbus.core.sources.impl.database.dao.mybatis;
 
 import io.github.eventbus.core.sources.impl.database.dao.QueuedEventDAO;
 import io.github.eventbus.core.sources.impl.database.model.QueuedEvent;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -23,9 +24,9 @@ public interface QueuedEventXmlMapper extends QueuedEventDAO {
     @Override
     int insert(QueuedEvent queuedEvent);
     @Override
-    int updateStateToUnconsumed(long id);
+    int updateStateToUnconsumed(@Param("id") long id);
     @Override
-    List<QueuedEvent> selectUnconsumedThenUpdateConsumed(String eventNames, int limit);
+    List<QueuedEvent> selectUnconsumedThenUpdateConsumed(String eventNames, int limit, @Param("targetTerminal") String targetTerminal);
     @Override
-    int cleanConsumed(String eventNames, int cycleHours);
+    int cleanConsumed(@Param("eventNames") String eventNames, @Param("cycleHours") int cycleHours);
 }

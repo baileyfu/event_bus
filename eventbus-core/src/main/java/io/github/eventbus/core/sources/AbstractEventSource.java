@@ -1,6 +1,7 @@
 package io.github.eventbus.core.sources;
 
 import io.github.eventbus.constants.EventSourceConfigConst;
+import io.github.eventbus.core.terminal.Terminal;
 import io.github.eventbus.core.terminal.TerminalFactory;
 import io.github.eventbus.exception.EventbusException;
 import io.github.eventbus.util.JSONEventSerializer;
@@ -29,6 +30,7 @@ public abstract class AbstractEventSource implements EventSource, InitializingBe
     //单次消费数量
     protected int consumeLimit;
     private String name;
+    protected Terminal currentTerminal;
 
     public AbstractEventSource(String name) {
         Assert.hasLength(name, "the EventSource'name can not be empty!");
@@ -50,6 +52,7 @@ public abstract class AbstractEventSource implements EventSource, InitializingBe
             setConsumeLimit(Integer.valueOf(environment.getProperty(EventSourceConfigConst.CONSUME_LIMIT, String.valueOf(DEFAULT_CONSUME_LIMIT))));
         }
         eventSerializer = eventSerializer == null ? JSONEventSerializer.getInstance() : eventSerializer;
+        currentTerminal = TerminalFactory.create();
     }
     public void setConsumeLimit(int consumeLimit) {
         this.consumeLimit = consumeLimit;
@@ -68,7 +71,7 @@ public abstract class AbstractEventSource implements EventSource, InitializingBe
         Event event = Event.EventBuilder.newInstance()
                 .name(eventName)
                 .message(message)
-                .sourceTerminal(TerminalFactory.create())
+                .sourceTerminal(currentTerminal)
                 .build();
         try {
             save(event);

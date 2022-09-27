@@ -36,16 +36,17 @@ CREATE TABLE `eventbus_queued_event` (
   `message` varchar(1000) COLLATE utf8mb4_unicode_ci DEFAULT '',
   `message_type` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT '',
   `source_terminal` varchar(300) COLLATE utf8mb4_unicode_ci DEFAULT '',
+  `target_terminal` varchar(300) COLLATE utf8mb4_unicode_ci DEFAULT '',
   `state` tinyint(1) DEFAULT '0',
   `create_time` datetime NOT NULL,
   `update_time` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `INDEX_state` (`state`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 ```
 存储过程DDL：
 ```
-CREATE DEFINER=`root`@`localhost` PROCEDURE `eventbusSelectUnconsumedThenUpdateConsumedForQueued`(IN in_eventNames VARCHAR(1000) , in_limit INT)
+CREATE DEFINER=`root`@`localhost` PROCEDURE `eventbusSelectUnconsumedThenUpdateConsumedForQueued`(IN in_eventNames VARCHAR(1000) , in_limit INT , in_target_terminal VARCHAR(300))
 BEGIN
  DECLARE v_id BIGINT DEFAULT 0;
  DECLARE v_serial_id VARCHAR(50) DEFAULT '';
@@ -69,7 +70,7 @@ BEGIN
   TRUNCATE TABLE _tmp_eventbus_queued_event_;
    FETCH selectUnconsumed INTO v_id,v_serial_id,v_name,v_message,v_message_type,v_source_terminal,v_state,v_create_time,v_update_time;
    WHILE done IS FALSE DO
-    update eventbus_queued_event set state=1,update_time=now() where id=v_id;
+    update eventbus_queued_event set state=1,target_terminal=in_target_terminal,update_time=now() where id=v_id;
     insert into _tmp_eventbus_queued_event_ values(v_id,v_serial_id,v_name,v_message,v_message_type,v_source_terminal,1,v_create_time,now());
   FETCH selectUnconsumed INTO v_id,v_serial_id,v_name,v_message,v_message_type,v_source_terminal,v_state,v_create_time,v_update_time;
    END WHILE;
@@ -92,6 +93,7 @@ BEGIN
  DECLARE v_message VARCHAR(1000) DEFAULT '';
  DECLARE v_message_type VARCHAR(45) DEFAULT '';
  DECLARE v_source_terminal VARCHAR(300) DEFAULT '';
+ DECLARE v_target_terminal VARCHAR(300) DEFAULT '';
  DECLARE v_state TINYINT(1) DEFAULT 0;
  DECLARE v_create_time DATETIME DEFAULT NULL;
  DECLARE v_update_time DATETIME DEFAULT NULL;
@@ -99,19 +101,19 @@ BEGIN
  DECLARE done INT DEFAULT FALSE;
 
  DECLARE selectConsumed CURSOR FOR 
-  select id,serial_id,name,message,message_type,source_terminal,state,create_time,update_time from eventbus_queued_event e where e.state=1 and FIND_IN_SET(e.name,in_eventNames) and DATE_ADD(create_time,INTERVAL in_cycleHours HOUR) < now() for update;
+  select id,serial_id,name,message,message_type,source_terminal,target_terminal,state,create_time,update_time from eventbus_queued_event e where e.state=1 and FIND_IN_SET(e.name,in_eventNames) and DATE_ADD(create_time,INTERVAL in_cycleHours HOUR) < now() for update;
  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
  
- CREATE TABLE if not exists eventbus_queued_event_dumped(`id` BIGINT(20),`serial_id` varchar(50),`name` varchar(45),`message` varchar(1000),`message_type` varchar(45),`source_terminal` varchar(300),`state` tinyint(1),`create_time` datetime,`update_time` datetime);   
+ CREATE TABLE if not exists eventbus_queued_event_dumped(`id` BIGINT(20),`serial_id` varchar(50),`name` varchar(45),`message` varchar(1000),`message_type` varchar(45),`source_terminal` varchar(300),`target_terminal` varchar(300),`state` tinyint(1),`create_time` datetime,`update_time` datetime);   
  
  START TRANSACTION;
   OPEN selectConsumed;
-   FETCH selectConsumed INTO v_id,v_serial_id,v_name,v_message,v_message_type,v_source_terminal,v_state,v_create_time,v_update_time;
+   FETCH selectConsumed INTO v_id,v_serial_id,v_name,v_message,v_message_type,v_source_terminal,v_target_terminal,v_state,v_create_time,v_update_time;
    WHILE done IS FALSE DO
     delete from eventbus_queued_event where id=v_id;
-    insert into eventbus_queued_event_dumped values(v_id,v_serial_id,v_name,v_message,v_message_type,v_source_terminal,1,v_create_time,now());
+    insert into eventbus_queued_event_dumped values(v_id,v_serial_id,v_name,v_message,v_message_type,v_source_terminal,v_target_terminal,1,v_create_time,now());
 	SET counter=counter+1;
-  FETCH selectConsumed INTO v_id,v_serial_id,v_name,v_message,v_message_type,v_source_terminal,v_state,v_create_time,v_update_time;
+  FETCH selectConsumed INTO v_id,v_serial_id,v_name,v_message,v_message_type,v_source_terminal,v_target_terminal,v_state,v_create_time,v_update_time;
    END WHILE;
   CLOSE selectConsumed;
  select counter;
@@ -147,18 +149,19 @@ CREATE TABLE `eventbus_topical_event` (
   `message` varchar(1000) COLLATE utf8mb4_unicode_ci DEFAULT '',
   `message_type` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT '',
   `source_terminal` varchar(300) COLLATE utf8mb4_unicode_ci DEFAULT '',
+  `target_terminal` varchar(300) COLLATE utf8mb4_unicode_ci DEFAULT '',
   `state` tinyint(1) DEFAULT '0',
   `create_time` datetime NOT NULL,
   `update_time` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `terminalId_INDEX` (`terminal_id`),
   KEY `stateAndterminalId_INDEX` (`state`,`terminal_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 ```
 
 存储过程DDL：
 ```
-CREATE DEFINER=`root`@`localhost` PROCEDURE `eventbusSelectUnconsumedThenUpdateConsumedForTopical`(IN in_terminalId VARCHAR(300) , in_limit INT)
+CREATE DEFINER=`root`@`localhost` PROCEDURE `eventbusSelectUnconsumedThenUpdateConsumedForTopical`(IN in_terminalId VARCHAR(300) , in_limit INT , in_target_terminal VARCHAR(300))
 BEGIN
  DECLARE v_id BIGINT DEFAULT 0;
  DECLARE v_terminal_id VARCHAR(300) DEFAULT '';
@@ -183,7 +186,7 @@ BEGIN
   TRUNCATE TABLE _tmp_eventbus_topical_event_;
    FETCH selectUnconsumed INTO v_id,v_terminal_id,v_serial_id,v_name,v_message,v_message_type,v_source_terminal,v_state,v_create_time,v_update_time;
    WHILE done IS FALSE DO
-    update eventbus_topical_event set state=1,update_time=now() where id=v_id;
+    update eventbus_topical_event set state=1,target_terminal=in_target_terminal,update_time=now() where id=v_id;
     insert into _tmp_eventbus_topical_event_ values(v_id,v_terminal_id,v_serial_id,v_name,v_message,v_message_type,v_source_terminal,1,v_create_time,now());
   FETCH selectUnconsumed INTO v_id,v_terminal_id,v_serial_id,v_name,v_message,v_message_type,v_source_terminal,v_state,v_create_time,v_update_time;
    END WHILE;
@@ -225,6 +228,7 @@ BEGIN
  DECLARE v_message VARCHAR(1000) DEFAULT '';
  DECLARE v_message_type VARCHAR(45) DEFAULT '';
  DECLARE v_source_terminal VARCHAR(300) DEFAULT '';
+ DECLARE v_target_terminal VARCHAR(300) DEFAULT '';
  DECLARE v_state TINYINT(1) DEFAULT 0;
  DECLARE v_create_time DATETIME DEFAULT NULL;
  DECLARE v_update_time DATETIME DEFAULT NULL;
@@ -232,19 +236,19 @@ BEGIN
  DECLARE done INT DEFAULT FALSE;
 
  DECLARE selectConsumed CURSOR FOR 
-  select id,terminal_id,serial_id,name,message,message_type,source_terminal,state,create_time,update_time from eventbus_topical_event e where e.state = 1 and terminal_id = in_terminalId and DATE_ADD(create_time,INTERVAL in_cycleHours HOUR) < now() for update;
+  select id,terminal_id,serial_id,name,message,message_type,source_terminal,target_terminal,state,create_time,update_time from eventbus_topical_event e where e.state = 1 and terminal_id = in_terminalId and DATE_ADD(create_time,INTERVAL in_cycleHours HOUR) < now() for update;
  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
  
- CREATE TABLE if not exists eventbus_topical_event_dumped(`id` BIGINT(20),`terminal_id` varchar(300),`serial_id` varchar(50),`name` varchar(45),`message` varchar(1000),`message_type` varchar(45),`source_terminal` varchar(300),`state` tinyint(1),`create_time` datetime,`update_time` datetime);   
+ CREATE TABLE if not exists eventbus_topical_event_dumped(`id` BIGINT(20),`terminal_id` varchar(300),`serial_id` varchar(50),`name` varchar(45),`message` varchar(1000),`message_type` varchar(45),`source_terminal` varchar(300),`target_terminal` varchar(300),`state` tinyint(1),`create_time` datetime,`update_time` datetime);   
  
  START TRANSACTION;
   OPEN selectConsumed;
-   FETCH selectConsumed INTO v_id,v_terminal_id,v_serial_id,v_name,v_message,v_message_type,v_source_terminal,v_state,v_create_time,v_update_time;
+   FETCH selectConsumed INTO v_id,v_terminal_id,v_serial_id,v_name,v_message,v_message_type,v_source_terminal,v_target_terminal,v_state,v_create_time,v_update_time;
    WHILE done IS FALSE DO
     delete from eventbus_topical_event where id=v_id;
-    insert into eventbus_topical_event_dumped values(v_id,v_terminal_id,v_serial_id,v_name,v_message,v_message_type,v_source_terminal,1,v_create_time,now());
+    insert into eventbus_topical_event_dumped values(v_id,v_terminal_id,v_serial_id,v_name,v_message,v_message_type,v_source_terminal,v_target_terminal,1,v_create_time,now());
 	SET counter=counter+1;
-  FETCH selectConsumed INTO v_id,v_terminal_id,v_serial_id,v_name,v_message,v_message_type,v_source_terminal,v_state,v_create_time,v_update_time;
+  FETCH selectConsumed INTO v_id,v_terminal_id,v_serial_id,v_name,v_message,v_message_type,v_source_terminal,v_target_terminal,v_state,v_create_time,v_update_time;
    END WHILE;
   CLOSE selectConsumed;
  select counter;

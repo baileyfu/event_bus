@@ -20,10 +20,10 @@ public interface TopicalEventAnnotationMapper extends TopicalEventDAO {
     @Override
     int insert(TopicalEvent topicalEvent);
 
-    @Select("{CALL eventbusSelectUnconsumedThenUpdateConsumedForTopical(#{terminalId,mode=IN,jdbcType=VARCHAR},#{limit,mode=IN,jdbcType=BIT})}")
+    @Select("{CALL eventbusSelectUnconsumedThenUpdateConsumedForTopical(#{terminalId,mode=IN,jdbcType=VARCHAR},#{limit,mode=IN,jdbcType=BIT},#{targetTerminal,mode=IN,jdbcType=VARCHAR})}")
     @Options(useCache = false, statementType = StatementType.CALLABLE)
     @Override
-    List<TopicalEvent> selectUnconsumedThenUpdateConsumed(@Param("terminalId") String terminalId,@Param("limit") int limit);
+    List<TopicalEvent> selectUnconsumedThenUpdateConsumed(@Param("terminalId") String terminalId,@Param("limit") int limit, @Param("targetTerminal") String targetTerminal);
 
     @Update("update eventbus_topical_event set state = " + TopicalEvent.STATE_UNCONSUMED + " where id = #{id}")
     @Options(useCache = false)

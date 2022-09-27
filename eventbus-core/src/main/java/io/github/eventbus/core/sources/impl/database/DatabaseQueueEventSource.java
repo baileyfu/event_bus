@@ -65,7 +65,7 @@ public class DatabaseQueueEventSource extends AbstractDatabaseEventSource implem
             return null;
         }
         Map<Long, Event> unconsumedMap = null;
-        List<QueuedEvent> unconsumedList = queuedEventDAO.selectUnconsumedThenUpdateConsumed(listenedEvents, consumeLimit);
+        List<QueuedEvent> unconsumedList = queuedEventDAO.selectUnconsumedThenUpdateConsumed(listenedEvents, consumeLimit, serializedTerminalForConsumed);
         if (unconsumedList != null && unconsumedList.size() > 0) {
             List<Long> queuedEventIdList = new ArrayList<>();
             unconsumedMap = unconsumedList.parallelStream().reduce(new HashMap<>(), (map, queuedEvent) -> {

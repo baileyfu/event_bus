@@ -13,7 +13,7 @@ import java.util.List;
  */
 public interface TopicalEventDAO {
     int insert(TopicalEvent topicalEvent);
-    List<TopicalEvent> selectUnconsumedThenUpdateConsumed(String terminalId, int limit);
+    List<TopicalEvent> selectUnconsumedThenUpdateConsumed(String terminalIdForRegister, int limit, String targetTerminal);
     int updateStateToUnconsumed(long id);
     int cleanConsumed(String terminalId, int cycleHours);
 }

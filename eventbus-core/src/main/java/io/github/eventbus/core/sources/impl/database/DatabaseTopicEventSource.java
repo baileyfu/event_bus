@@ -38,7 +38,8 @@ public class DatabaseTopicEventSource extends AbstractDatabaseEventSource {
 
     private TopicalEventDAO topicalEventDAO;
     private TopicalEventTerminalDAO topicalEventTerminalDAO;
-    private String currentTerminalId;
+    //注册到TopicalEventTerminal的主键
+    private String terminalIdForRegister;
     //是否将超过24小时未活跃的客户端设置未失活(将不再接收任何事件)
     private Boolean inactivateRequired;
     //失活周期,单位：小时;最小为2小时
@@ -88,7 +89,7 @@ public class DatabaseTopicEventSource extends AbstractDatabaseEventSource {
             }
             @Override
             public void doOn() throws Exception {
-                currentTerminalId = createCurrentTerminalId(TerminalFactory.create());
+                terminalIdForRegister = createCurrentTerminalId(TerminalFactory.create());
                 registerTerminal();
                 MixedActionGenerator.loadAction(actionName, INACTIVATE_ACTION_INTERVAL_HOURS, TimeUnit.HOURS, () -> {
                     try {
@@ -115,11 +116,11 @@ public class DatabaseTopicEventSource extends AbstractDatabaseEventSource {
      */
     private void registerTerminal(){
         String eventSourceName = this.getName();
-        TopicalEventTerminal topicalEventTerminal = topicalEventTerminalDAO.selectByEventSourceNameAndTerminalId(eventSourceName, currentTerminalId);
+        TopicalEventTerminal topicalEventTerminal = topicalEventTerminalDAO.selectByEventSourceNameAndTerminalId(eventSourceName, terminalIdForRegister);
         if (topicalEventTerminal == null) {
             topicalEventTerminal = new TopicalEventTerminal();
             topicalEventTerminal.setEventSourceName(eventSourceName);
-            topicalEventTerminal.setTerminalId(currentTerminalId);
+            topicalEventTerminal.setTerminalId(terminalIdForRegister);
             topicalEventTerminal.setState(TopicalEventTerminal.TERMINAL_STATE_NORMAL);
             topicalEventTerminal.setLastActiveTime(new Date());
             topicalEventTerminalDAO.insert(topicalEventTerminal);
@@ -133,7 +134,7 @@ public class DatabaseTopicEventSource extends AbstractDatabaseEventSource {
      * 激活当前节点并更新最后活跃时间
      */
     private void activateTerminal(){
-        topicalEventTerminalDAO.updateLastActiveTime(getName(), currentTerminalId);
+        topicalEventTerminalDAO.updateLastActiveTime(getName(), terminalIdForRegister);
     }
     /**
      * 剔除不再活跃的节点,使其不再收到事件
@@ -181,7 +182,7 @@ public class DatabaseTopicEventSource extends AbstractDatabaseEventSource {
     @Override
     protected Map<Long, Event> fetchAndSetUnconsumed() {
         Map<Long, Event> unconsumedMap = null;
-        List<TopicalEvent> unconsumedList = topicalEventDAO.selectUnconsumedThenUpdateConsumed(currentTerminalId, consumeLimit);
+        List<TopicalEvent> unconsumedList = topicalEventDAO.selectUnconsumedThenUpdateConsumed(terminalIdForRegister, consumeLimit, serializedTerminalForConsumed);
         if (unconsumedList != null && unconsumedList.size() > 0) {
             List<Long> queuedEventIdList = new ArrayList<>();
             unconsumedMap = unconsumedList.parallelStream().reduce(new HashMap<>(), (map, topicalEvent) -> {
@@ -204,6 +205,6 @@ public class DatabaseTopicEventSource extends AbstractDatabaseEventSource {
 
     @Override
     protected void clean() throws Exception {
-        topicalEventDAO.cleanConsumed(currentTerminalId, cleanCycle);
+        topicalEventDAO.cleanConsumed(terminalIdForRegister, cleanCycle);
     }
 }

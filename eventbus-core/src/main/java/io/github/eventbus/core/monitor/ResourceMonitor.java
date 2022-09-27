@@ -3,6 +3,7 @@ package io.github.eventbus.core.monitor;
 import io.github.ali.commons.variable.MixedActionGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.Ordered;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,9 +16,15 @@ import java.util.List;
  * @date 2022-09-16 10:55
  * @description
  */
-public abstract class ResourceMonitor {
+public abstract class ResourceMonitor implements Ordered {
     private static Logger LOGGER = LoggerFactory.getLogger(ResourceMonitor.class);
     private static boolean STARTED;
+
+    @Override
+    public int getOrder() {
+        return Ordered.LOWEST_PRECEDENCE + 1;
+    }
+
     protected void doStart() {
         synchronized (ResourceMonitor.class) {
             if (!STARTED) {
