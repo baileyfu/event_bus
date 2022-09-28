@@ -18,6 +18,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 /**
+ * 数据库事件源基类<br/>
+ * 负责清理已消费事件
+ *
  * @author ALi
  * @version 1.0
  * @date 2022-09-07 17:42

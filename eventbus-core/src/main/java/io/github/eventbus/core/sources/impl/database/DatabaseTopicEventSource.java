@@ -21,8 +21,8 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * 发布-订阅型(Topic)-事件发给所有订阅的Terminal，但只能被每个Terminal集群节点中的一个节点消费一次<br/>
- * 确保事件被正常消费,消费失败可重复
- *
+ * 确保事件被正常消费,消费失败可重复<br/>
+ * 负责维护节点（激活/失活）
  * @author ALi
  * @version 1.0
  * @date 2022-09-07 11:16
