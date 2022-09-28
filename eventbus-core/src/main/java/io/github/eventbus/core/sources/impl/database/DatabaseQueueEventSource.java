@@ -33,29 +33,21 @@ public class DatabaseQueueEventSource extends AbstractDatabaseEventSource implem
     @Override
     public void afterPropertiesSet() throws Exception {
         super.afterPropertiesSet();
-        this.eventSerializer = new Event.EventSerializer<QueuedEvent>() {
-            @Override
-            public QueuedEvent serialize(Event event) throws EventbusException {
-                QueuedEvent queuedEvent = BeanConverter.eventToQueuedEvent(event);
-                queuedEvent.setMessage(serializeMessage(event.getMessage()));
-                queuedEvent.setSourceTerminal(serializeTerminal(event.getSourceTerminal()));
-                return queuedEvent;
-            }
+        this.setEventSerializer(null);
+    }
 
-            @Override
-            public Event deserialize(QueuedEvent queuedEvent) throws EventbusException {
-                return Event.EventBuilder.newInstance()
-                        .name(queuedEvent.getName())
-                        .message(deserializeMessage(queuedEvent.getMessage(), queuedEvent.getMessageType()))
-                        .sourceTerminal(deserializeTerminal(queuedEvent.getSourceTerminal()))
-                        .build(queuedEvent.getSerialId());
-            }
-        };
+    /**
+     * DatabaseQueueEventSource禁止自定义序列化
+     * @param eventSerializer 将被忽略
+     */
+    @Override
+    public void setEventSerializer(Event.EventSerializer eventSerializer) {
+        super.setEventSerializer(QUEUE_EVENT_SERIALIZER);
     }
 
     @Override
     protected void save(Event event) throws Exception {
-        queuedEventDAO.insert((QueuedEvent) eventSerializer.serialize(event));
+        queuedEventDAO.insert(serialize(event));
     }
 
     @Override
@@ -70,7 +62,7 @@ public class DatabaseQueueEventSource extends AbstractDatabaseEventSource implem
             List<Long> queuedEventIdList = new ArrayList<>();
             unconsumedMap = unconsumedList.parallelStream().reduce(new HashMap<>(), (map, queuedEvent) -> {
                 try {
-                    map.put(queuedEvent.getId(), eventSerializer.deserialize(queuedEvent));
+                    map.put(queuedEvent.getId(), deserialize(queuedEvent));
                 } catch (EventbusException ee) {
                     throw new RuntimeException("deserialize QueuedEvent '" + queuedEvent + "' error !", ee);
                 }
@@ -105,4 +97,22 @@ public class DatabaseQueueEventSource extends AbstractDatabaseEventSource implem
             this.listenedEvents = null;
         }
     }
+    private static final Event.EventSerializer QUEUE_EVENT_SERIALIZER = new Event.EventSerializer<QueuedEvent>() {
+        @Override
+        public QueuedEvent serialize(Event event) throws EventbusException {
+            QueuedEvent queuedEvent = BeanConverter.eventToQueuedEvent(event);
+            queuedEvent.setMessage(serializeMessage(event.getMessage()));
+            queuedEvent.setSourceTerminal(serializeTerminal(event.getSourceTerminal()));
+            return queuedEvent;
+        }
+
+        @Override
+        public Event deserialize(QueuedEvent queuedEvent) throws EventbusException {
+            return Event.EventBuilder.newInstance()
+                    .name(queuedEvent.getName())
+                    .message(deserializeMessage(queuedEvent.getMessage(), queuedEvent.getMessageType()))
+                    .sourceTerminal(deserializeTerminal(queuedEvent.getSourceTerminal()))
+                    .build(queuedEvent.getSerialId());
+        }
+    };
 }

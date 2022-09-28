@@ -129,24 +129,36 @@ public abstract class AbstractDatabaseEventSource extends ManualConsumeEventSour
         }
     }
 
-    protected String serializeMessage(Object message) {
-        return message == null ? StringUtils.EMPTY : JSON.toJSONString(message, JSONConfig.SERIALIZER_FEATURE_ARRAY);
-    }
-    protected Object deserializeMessage(String jsonMessage,String messageTypeValue) throws EventbusException{
-        try{
-            return StringUtils.isEmpty(jsonMessage) ? null : JSON.parseObject(jsonMessage,Class.forName(messageTypeValue), JSONConfig.FEATURE_ARRAY);
-        }catch(Exception e){
-            throw new EventbusException("AbstractDatabaseEventSource.deserializeMessage() error!", e);
-        }
-    }
-    protected String serializeTerminal(Terminal sourceTerminal) {
-        return sourceTerminal == null ? StringUtils.EMPTY : JSON.toJSONString(sourceTerminal);
-    }
-    protected Terminal deserializeTerminal(String jsonSourceTerminal) {
-        return StringUtils.isEmpty(jsonSourceTerminal) ? null : JSON.parseObject(jsonSourceTerminal, Terminal.class);
-    }
-
     abstract protected Map<Long,Event> fetchAndSetUnconsumed() throws Exception;
     abstract protected void setUnconsumed(long eventId) throws Exception;
     abstract protected void clean() throws Exception;
+
+    protected static String serializeMessage(Object message) throws EventbusException {
+        try {
+            return message == null ? StringUtils.EMPTY : JSON.toJSONString(message, JSONConfig.SERIALIZER_FEATURE_ARRAY);
+        } catch (Exception e) {
+            throw new EventbusException("DatabaseEventSource.serializeMessage() error!", e);
+        }
+    }
+    protected static Object deserializeMessage(String jsonMessage,String messageTypeValue) throws EventbusException{
+        try {
+            return StringUtils.isEmpty(jsonMessage) ? null : JSON.parseObject(jsonMessage, Class.forName(messageTypeValue), JSONConfig.FEATURE_ARRAY);
+        } catch (Exception e) {
+            throw new EventbusException("DatabaseEventSource.deserializeMessage() error!", e);
+        }
+    }
+    protected static String serializeTerminal(Terminal sourceTerminal) throws EventbusException {
+        try {
+            return sourceTerminal == null ? StringUtils.EMPTY : JSON.toJSONString(sourceTerminal);
+        } catch (Exception e) {
+            throw new EventbusException("DatabaseEventSource.serializeTerminal() error!", e);
+        }
+    }
+    protected static Terminal deserializeTerminal(String jsonSourceTerminal) throws EventbusException {
+        try {
+            return StringUtils.isEmpty(jsonSourceTerminal) ? null : JSON.parseObject(jsonSourceTerminal, Terminal.class);
+        } catch (Exception e) {
+            throw new EventbusException("DatabaseEventSource.deserializeTerminal() error!", e);
+        }
+    }
 }

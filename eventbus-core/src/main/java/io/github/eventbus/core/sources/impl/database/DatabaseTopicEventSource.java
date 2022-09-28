@@ -62,24 +62,7 @@ public class DatabaseTopicEventSource extends AbstractDatabaseEventSource {
         if (inactivateCycle < MIN_INACTIVATE_CYCLE) {
             setInactivateCycle(Integer.valueOf(environment.getProperty(EventSourceConfigConst.MANUAL_DATABASE_TOPIC_INACTIVATE_CYCLE, String.valueOf(DEFAULT_INACTIVATE_CYCLE))));
         }
-        this.eventSerializer = new Event.EventSerializer<TopicalEvent>() {
-            @Override
-            public TopicalEvent serialize(Event event) throws EventbusException {
-                TopicalEvent topicalEvent = BeanConverter.eventToTopicalEvent(event);
-                topicalEvent.setMessage(serializeMessage(event.getMessage()));
-                topicalEvent.setSourceTerminal(serializeTerminal(event.getSourceTerminal()));
-                return topicalEvent;
-            }
-
-            @Override
-            public Event deserialize(TopicalEvent topicalEvent) throws EventbusException {
-                return Event.EventBuilder.newInstance()
-                        .name(topicalEvent.getName())
-                        .message(deserializeMessage(topicalEvent.getMessage(), topicalEvent.getMessageType()))
-                        .sourceTerminal(deserializeTerminal(topicalEvent.getSourceTerminal()))
-                        .build(topicalEvent.getSerialId());
-            }
-        };
+        this.setEventSerializer(null);
         //启动定时(1小时)激活当前节点并剔除失活节点
         final String actionName = this + ".inactivateTerminal";
         ResourceMonitor.registerResource(new ResourceMonitor.Switch() {
@@ -110,6 +93,14 @@ public class DatabaseTopicEventSource extends AbstractDatabaseEventSource {
     }
     protected String createCurrentTerminalId(Terminal terminal){
         return terminal.getName();
+    }
+    /**
+     * DatabaseTopicEventSource禁止自定义序列化
+     * @param eventSerializer 将被忽略
+     */
+    @Override
+    public void setEventSerializer(Event.EventSerializer eventSerializer) {
+        super.setEventSerializer(TOPIC_EVENT_SERIALIZER);
     }
     /**
      * 注册当前终端节点
@@ -167,7 +158,7 @@ public class DatabaseTopicEventSource extends AbstractDatabaseEventSource {
 
     @Override
     protected void save(Event event) throws Exception {
-        TopicalEvent topicalEvent = (TopicalEvent) eventSerializer.serialize(event);
+        TopicalEvent topicalEvent = serialize(event);
         //TODO 缓存
         List<TopicalEventTerminal> activeTerminal = topicalEventTerminalDAO.selectActive(this.getName());
         if (activeTerminal != null && activeTerminal.size() > 0) {
@@ -187,7 +178,7 @@ public class DatabaseTopicEventSource extends AbstractDatabaseEventSource {
             List<Long> queuedEventIdList = new ArrayList<>();
             unconsumedMap = unconsumedList.parallelStream().reduce(new HashMap<>(), (map, topicalEvent) -> {
                 try {
-                    map.put(topicalEvent.getId(), eventSerializer.deserialize(topicalEvent));
+                    map.put(topicalEvent.getId(), deserialize(topicalEvent));
                 } catch (EventbusException ee) {
                     throw new RuntimeException("deserialize TopicalEvent '" + topicalEvent + "' error !", ee);
                 }
@@ -207,4 +198,23 @@ public class DatabaseTopicEventSource extends AbstractDatabaseEventSource {
     protected void clean() throws Exception {
         topicalEventDAO.cleanConsumed(terminalIdForRegister, cleanCycle);
     }
+
+    private static final Event.EventSerializer TOPIC_EVENT_SERIALIZER = new Event.EventSerializer<TopicalEvent>() {
+        @Override
+        public TopicalEvent serialize(Event event) throws EventbusException {
+            TopicalEvent topicalEvent = BeanConverter.eventToTopicalEvent(event);
+            topicalEvent.setMessage(serializeMessage(event.getMessage()));
+            topicalEvent.setSourceTerminal(serializeTerminal(event.getSourceTerminal()));
+            return topicalEvent;
+        }
+
+        @Override
+        public Event deserialize(TopicalEvent topicalEvent) throws EventbusException {
+            return Event.EventBuilder.newInstance()
+                    .name(topicalEvent.getName())
+                    .message(deserializeMessage(topicalEvent.getMessage(), topicalEvent.getMessageType()))
+                    .sourceTerminal(deserializeTerminal(topicalEvent.getSourceTerminal()))
+                    .build(topicalEvent.getSerialId());
+        }
+    };
 }

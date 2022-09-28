@@ -28,13 +28,13 @@ public abstract class AbstractEventSource implements EventSource, InitializingBe
 
     protected Logger logger = LoggerFactory.getLogger(this.getClass());
     protected Environment environment;
-    protected Event.EventSerializer eventSerializer;
+    protected Terminal currentTerminal;
     //单次消费数量
     protected int consumeLimit;
     private String name;
     private boolean isMarching;
     private boolean isConsuming;
-    protected Terminal currentTerminal;
+    private Event.EventSerializer eventSerializer;
 
     public AbstractEventSource(String name) {
         Assert.hasLength(name, "the EventSource'name can not be empty!");
@@ -50,11 +50,20 @@ public abstract class AbstractEventSource implements EventSource, InitializingBe
         this.eventSerializer = eventSerializer;
     }
 
+    protected <T> T serialize(Event event) throws EventbusException {
+        return (T) eventSerializer.serialize(event);
+    }
+
+    protected Event deserialize(Object serialized) throws EventbusException {
+        return eventSerializer.deserialize(serialized);
+    }
+
     @Override
     public void afterPropertiesSet() throws Exception {
         if (consumeLimit < MIN_CONSUME_LIMIT) {
             setConsumeLimit(Integer.valueOf(environment.getProperty(EventSourceConfigConst.CONSUME_LIMIT, String.valueOf(DEFAULT_CONSUME_LIMIT))));
         }
+        //未设置序列化则使用默认
         eventSerializer = eventSerializer == null ? JSONEventSerializer.getInstance() : eventSerializer;
         currentTerminal = TerminalFactory.create();
         isMarching = true;
