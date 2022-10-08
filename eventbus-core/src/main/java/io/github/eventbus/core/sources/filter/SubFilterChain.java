@@ -38,11 +38,18 @@ public class SubFilterChain implements SubFilter{
         }
         return true;
     }
-    //TODO : 过滤规则可热加载
+    public void addFilter(SubFilter filter){
+        Assert.notNull(filter, "SubFilter can not be null.");
+        this.filters.add(filter);
+        invokeFilterChangingListener();
+    }
     public void updateFilters(Collection<SubFilter> filters){
         this.filters = filters;
+        invokeFilterChangingListener();
+    }
+    private void invokeFilterChangingListener() {
         if (filterChangingListeners != null && filterChangingListeners.size() > 0) {
-            for(ListenedFilterChangingListener filterChangingListener : filterChangingListeners) {
+            for (ListenedFilterChangingListener filterChangingListener : filterChangingListeners) {
                 try {
                     filterChangingListener.notifyCausedByFilterChanging();
                 } catch (Exception e) {
@@ -51,7 +58,6 @@ public class SubFilterChain implements SubFilter{
             }
         }
     }
-
     /**
      * 过滤器变更监听
      */

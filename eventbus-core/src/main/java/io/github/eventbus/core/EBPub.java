@@ -26,7 +26,7 @@ public class EBPub {
     private Logger logger = LoggerFactory.getLogger(EBPub.class);
     private Map<String,EventSource> sources;
     private String[] sourceKeys;
-    private PubRouterChain pubRouterChain;
+    private final PubRouterChain pubRouterChain;
 
     EBPub(Collection<EventSource> sources, PubRouterChain pubRouterChain) {
         Assert.isTrue(sources != null && sources.size() > 0,"the EBPub has no EventSource!");
@@ -35,8 +35,12 @@ public class EBPub {
             map.put(es.getName(), es);
             return map;
         }, (m, n) -> m);
-        this.sourceKeys = this.sources.keySet().toArray(new String[0]);
+        this.sourceKeys = this.sources.keySet().toArray(new String[this.sources.size()]);
         this.pubRouterChain = pubRouterChain;
+    }
+
+    PubRouterChain getPubRouterChain(){
+        return pubRouterChain;
     }
 
     void emit(String eventName) throws EventbusException {

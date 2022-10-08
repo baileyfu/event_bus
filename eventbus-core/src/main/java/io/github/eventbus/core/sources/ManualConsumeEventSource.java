@@ -60,9 +60,8 @@ public abstract class ManualConsumeEventSource extends AbstractEventSource{
     protected void startConsume(Function<String, EventConsumer> consumerGetter) {
         MixedActionGenerator.loadAction(generateActionName(),consumeInterval, TimeUnit.MILLISECONDS,()->{
             try {
-                int consumed = doConsume(consumerGetter);
                 // 如果没消费到消息则暂停x毫秒
-                if (pauseIfNotConsumed > 0 && consumed == 0) {
+                if (doConsume(consumerGetter) == 0 && pauseIfNotConsumed > 0) {
                     Thread.sleep(pauseIfNotConsumed);
                 }
             } catch (Exception e) {

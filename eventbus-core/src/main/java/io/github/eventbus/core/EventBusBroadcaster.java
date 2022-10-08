@@ -1,8 +1,11 @@
 package io.github.eventbus.core;
 
+import io.github.eventbus.core.sources.route.PubRouter;
 import io.github.eventbus.exception.EventbusException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Collection;
 
 /**
  * @author ALi
@@ -24,6 +27,22 @@ public class EventBusBroadcaster {
             LOGGER.warn("EventBusBroadcaster has already closed , you will could not broadcast any event to EventBus!");
         }
         INSTANCE = this;
+    }
+
+    /**
+     * 新增路由
+     * @param router
+     */
+    public void addRouter(PubRouter router){
+        ebpub.getPubRouterChain().addRouter(router);
+    }
+
+    /**
+     * 更新路由
+     * @param routers
+     */
+    public void updateRouters(Collection<PubRouter> routers){
+        ebpub.getPubRouterChain().updateRouters(routers);
     }
 
     /**
@@ -57,5 +76,9 @@ public class EventBusBroadcaster {
             return false;
         }
         return true;
+    }
+
+    public static EventBusBroadcaster getInstance(){
+        return INSTANCE;
     }
 }

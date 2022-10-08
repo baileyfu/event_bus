@@ -2,6 +2,7 @@ package io.github.eventbus.core;
 
 import io.github.ali.commons.function.ThrConsumer;
 import io.github.eventbus.core.monitor.ResourceMonitor;
+import io.github.eventbus.core.sources.filter.SubFilter;
 import io.github.eventbus.core.terminal.Terminal;
 import io.github.eventbus.exception.EventbusException;
 import org.slf4j.Logger;
@@ -69,6 +70,21 @@ public class EventBusListener{
     }
 
     /**
+     * 新增过滤器
+     * @param filter
+     */
+    public void addFilter(SubFilter filter) {
+        ebsub.getSubFilterChain().addFilter(filter);
+    }
+    /**
+     * 更新过滤器
+     * @param filters
+     */
+    public void updateFilters(Collection<SubFilter> filters){
+        ebsub.getSubFilterChain().updateFilters(filters);
+    }
+
+    /**
      * 监听事件
      * @param eventName
      * @param consumer
@@ -114,6 +130,10 @@ public class EventBusListener{
         if (UniqueEventHandler.class.isAssignableFrom(handler.getClass())) {
             INSTANCE.ebsub.setUniqueEventHandler(handler);
         }
+    }
+
+    public static EventBusListener getInstance(){
+        return INSTANCE;
     }
 
     /**

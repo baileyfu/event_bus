@@ -1,4 +1,4 @@
-﻿package io.github.eventbus.core.sources;
+package io.github.eventbus.core.sources;
 
 import io.github.eventbus.core.terminal.Terminal;
 

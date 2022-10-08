@@ -9,6 +9,7 @@ import io.github.eventbus.core.event.Event;
 import io.github.eventbus.core.sources.EventConsumer;
 import io.github.eventbus.core.sources.ManualConsumeEventSource;
 import io.github.eventbus.core.terminal.Terminal;
+import io.github.eventbus.core.terminal.TerminalFactory;
 import io.github.eventbus.exception.EventbusException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -49,7 +50,7 @@ public abstract class AbstractDatabaseEventSource extends ManualConsumeEventSour
     @Override
     public void afterPropertiesSet() throws Exception {
         super.afterPropertiesSet();
-        this.serializedTerminalForConsumed = serializeTerminal(currentTerminal);
+        this.serializedTerminalForConsumed = serializeTerminal(TerminalFactory.create());
         if (cleaningRequired == null) {
             setCleaningRequired(Boolean.valueOf(environment.getProperty(EventSourceConfigConst.MANUAL_DATABASE_CLEAN_REQUIRED, String.valueOf(DEFAULT_CLEAN_REQUIRED))));
         }

@@ -11,6 +11,7 @@ import io.github.eventbus.core.sources.impl.database.dao.TopicalEventTerminalDAO
 import io.github.eventbus.core.sources.impl.database.model.TopicalEvent;
 import io.github.eventbus.core.sources.impl.database.model.TopicalEventTerminal;
 import io.github.eventbus.core.terminal.Terminal;
+import io.github.eventbus.core.terminal.TerminalFactory;
 import io.github.eventbus.exception.EventbusException;
 import io.github.eventbus.util.BeanConverter;
 import org.apache.commons.lang3.time.DateUtils;
@@ -72,7 +73,7 @@ public class DatabaseTopicEventSource extends AbstractDatabaseEventSource {
             }
             @Override
             public void doOn() throws Exception {
-                terminalIdForRegister = createCurrentTerminalId(currentTerminal);
+                terminalIdForRegister = createCurrentTerminalId(TerminalFactory.create());
                 registerTerminal();
                 MixedActionGenerator.loadAction(actionName, INACTIVATE_ACTION_INTERVAL_HOURS, TimeUnit.HOURS, () -> {
                     try {

@@ -34,7 +34,7 @@ public class SpringEventSource extends AutoConsumeEventSource implements Applica
     @Override
     public void startConsume(Function<String, EventConsumer> consumerGetter) {
         applicationContext.addApplicationListener((ApplicationListener<PayloadApplicationEvent>) applicationEvent -> {
-            if(running){
+            if (running) {
                 Object payload = applicationEvent.getPayload();
                 if (payload == null || !Event.class.isAssignableFrom(payload.getClass())) {
                     return;

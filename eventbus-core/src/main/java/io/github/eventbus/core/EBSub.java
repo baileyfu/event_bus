@@ -21,13 +21,13 @@ import java.util.function.Function;
  */
 public class EBSub implements SubFilterChain.ListenedFilterChangingListener {
     private Logger logger = LoggerFactory.getLogger(EBSub.class);
-    private EventConsumer noMatchedHandler = (eventSourceName, sourceTerminal, eventName, message) -> {
+    private EventConsumer noMatchedConsumer = (eventSourceName, sourceTerminal, eventName, message) -> {
         if(logger.isDebugEnabled()){
             logger.debug(">>>---Eventbus received event '" + eventName + "' with message '"+message+"' from '"+sourceTerminal + "' on Eventsource '" + eventSourceName + "' , but no matched EventConsumer found.");
         }
         return false;
     };
-    private EventConsumer filteredHandler = (eventSourceName, sourceTerminal, eventName, message) -> {
+    private EventConsumer filteredConsumer = (eventSourceName, sourceTerminal, eventName, message) -> {
         if(logger.isDebugEnabled()){
             logger.debug(">>>---Eventbus received event '" + eventName + "' with message '"+message+"' from '"+sourceTerminal + "' on Eventsource '" + eventSourceName + "' , but it has been filtered.");
         }
@@ -49,10 +49,10 @@ public class EBSub implements SubFilterChain.ListenedFilterChangingListener {
         this.filteredEvent = new HashSet<>();
         this.consumerGetter = (eventName) -> {
             if (filteredEvent.contains(eventName)) {
-                return filteredHandler;
+                return filteredConsumer;
             }
             EventConsumer consumer = consumerMap.get(eventName);
-            return consumer == null ? noMatchedHandler : uniqueEventConsumer != null ? uniqueEventConsumer : consumer;
+            return consumer == null ? noMatchedConsumer : uniqueEventConsumer != null ? uniqueEventConsumer : consumer;
         };
         this.subFilterChain = subFilterChain;
         this.subFilterChain.registerFilterChangingListener(this);

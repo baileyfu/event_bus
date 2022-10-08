@@ -3,7 +3,6 @@ package io.github.eventbus.core.sources;
 import io.github.eventbus.constants.EventSourceConfigConst;
 import io.github.eventbus.core.event.Event;
 import io.github.eventbus.core.event.EventSerializer;
-import io.github.eventbus.core.terminal.Terminal;
 import io.github.eventbus.core.terminal.TerminalFactory;
 import io.github.eventbus.exception.EventbusException;
 import io.github.eventbus.core.event.JSONEventSerializer;
@@ -32,7 +31,6 @@ public abstract class AbstractEventSource implements EventSource, InitializingBe
     protected Environment environment;
     //单次消费数量
     protected int consumeLimit;
-    protected Terminal currentTerminal;
     private String name;
     private boolean isMarching;
     private boolean isConsuming;
@@ -67,7 +65,6 @@ public abstract class AbstractEventSource implements EventSource, InitializingBe
         }
         //未设置序列化则使用默认
         eventSerializer = eventSerializer == null ? JSONEventSerializer.getInstance() : eventSerializer;
-        currentTerminal = TerminalFactory.create();
         isMarching = true;
         isConsuming = false;
     }
@@ -91,7 +88,7 @@ public abstract class AbstractEventSource implements EventSource, InitializingBe
         Event event = Event.EventBuilder.newInstance()
                 .name(eventName)
                 .message(message)
-                .sourceTerminal(currentTerminal)
+                .sourceTerminal(TerminalFactory.create())
                 .build();
         try {
             save(event);
