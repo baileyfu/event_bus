@@ -256,5 +256,13 @@ BEGIN
 END
 ```
 
-### 注意事项
+### 二、序列化
+事件源在存入事件前/取出事件后，都会对事件进行序列化/反序列化。
+
+序列化接口为io.github.eventbus.core.sources.EventSerializer。
+
+系统提供默认的序列化实现：JSONEventSerializer，可自定义实现并在创建事件源时注入 。
+
+
+### *注意事项
 1、使用DatabaseEventSource类型的事件源时，定义名为DatabaseEventSource.rollback.failed的日志记录器可以查看回滚失败（消费失败引起的回滚，以让事件可以再次被消费）的事件，手动重置事件状态以使其被再次消费；

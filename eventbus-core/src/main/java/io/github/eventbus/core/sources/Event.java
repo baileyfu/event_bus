@@ -1,7 +1,6 @@
 package io.github.eventbus.core.sources;
 
 import io.github.eventbus.core.terminal.Terminal;
-import io.github.eventbus.exception.EventbusException;
 import io.github.eventbus.util.IDGenerator;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.springframework.util.Assert;
@@ -52,14 +51,6 @@ public class Event implements Serializable {
                 .toString();
     }
 
-    /**
-     * 事件序列化
-     */
-    public interface EventSerializer<T>{
-        T serialize(Event event) throws EventbusException;
-
-        Event deserialize(T serialized) throws EventbusException;
-    }
     public static class EventBuilder{
         private Event event;
         private EventBuilder(){

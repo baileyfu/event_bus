@@ -69,7 +69,6 @@ public class EDAConfiguration {
             return !eventName.equals("user.login");
         };
     }
-
     @Bean
     public EDAEventDistributor edaEventDistributor(){
         return new EDAEventDistributor();

@@ -5,12 +5,12 @@ import io.github.ali.commons.variable.MixedActionGenerator;
 import io.github.eventbus.constants.EventSourceConfigConst;
 import io.github.eventbus.core.monitor.ResourceMonitor;
 import io.github.eventbus.core.sources.Event;
+import io.github.eventbus.core.sources.EventSerializer;
 import io.github.eventbus.core.sources.impl.database.dao.TopicalEventDAO;
 import io.github.eventbus.core.sources.impl.database.dao.TopicalEventTerminalDAO;
 import io.github.eventbus.core.sources.impl.database.model.TopicalEvent;
 import io.github.eventbus.core.sources.impl.database.model.TopicalEventTerminal;
 import io.github.eventbus.core.terminal.Terminal;
-import io.github.eventbus.core.terminal.TerminalFactory;
 import io.github.eventbus.exception.EventbusException;
 import io.github.eventbus.util.BeanConverter;
 import org.apache.commons.lang3.time.DateUtils;
@@ -47,9 +47,9 @@ public class DatabaseTopicEventSource extends AbstractDatabaseEventSource {
 
     public DatabaseTopicEventSource(String name, TopicalEventDAO topicalEventDAO, TopicalEventTerminalDAO topicalEventTerminalDAO) {
         super(name);
-        Asserts.notNull(topicalEventDAO, "topicalEventDAO");
+        Asserts.notNull(topicalEventDAO, "TopicalEventDAO");
         this.topicalEventDAO = topicalEventDAO;
-        Asserts.notNull(topicalEventDAO, "topicalEventTerminalDAO");
+        Asserts.notNull(topicalEventDAO, "TopicalEventTerminalDAO");
         this.topicalEventTerminalDAO = topicalEventTerminalDAO;
     }
 
@@ -72,7 +72,7 @@ public class DatabaseTopicEventSource extends AbstractDatabaseEventSource {
             }
             @Override
             public void doOn() throws Exception {
-                terminalIdForRegister = createCurrentTerminalId(TerminalFactory.create());
+                terminalIdForRegister = createCurrentTerminalId(currentTerminal);
                 registerTerminal();
                 MixedActionGenerator.loadAction(actionName, INACTIVATE_ACTION_INTERVAL_HOURS, TimeUnit.HOURS, () -> {
                     try {
@@ -99,7 +99,7 @@ public class DatabaseTopicEventSource extends AbstractDatabaseEventSource {
      * @param eventSerializer 将被忽略
      */
     @Override
-    public void setEventSerializer(Event.EventSerializer eventSerializer) {
+    public void setEventSerializer(EventSerializer eventSerializer) {
         super.setEventSerializer(TOPIC_EVENT_SERIALIZER);
     }
     /**
@@ -199,7 +199,7 @@ public class DatabaseTopicEventSource extends AbstractDatabaseEventSource {
         topicalEventDAO.cleanConsumed(terminalIdForRegister, cleanCycle);
     }
 
-    private static final Event.EventSerializer TOPIC_EVENT_SERIALIZER = new Event.EventSerializer<TopicalEvent>() {
+    private static final EventSerializer TOPIC_EVENT_SERIALIZER = new EventSerializer<TopicalEvent>() {
         @Override
         public TopicalEvent serialize(Event event) throws EventbusException {
             TopicalEvent topicalEvent = BeanConverter.eventToTopicalEvent(event);

@@ -2,6 +2,7 @@ package io.github.eventbus.core.sources.impl.database;
 
 import io.github.eventbus.core.EBSub;
 import io.github.eventbus.core.sources.Event;
+import io.github.eventbus.core.sources.EventSerializer;
 import io.github.eventbus.core.sources.impl.database.dao.QueuedEventDAO;
 import io.github.eventbus.core.sources.impl.database.model.QueuedEvent;
 import io.github.eventbus.exception.EventbusException;
@@ -26,7 +27,7 @@ public class DatabaseQueueEventSource extends AbstractDatabaseEventSource implem
     protected QueuedEventDAO queuedEventDAO;
     public DatabaseQueueEventSource(String name, QueuedEventDAO queuedEventDAO) {
         super(name);
-        Asserts.notNull(queuedEventDAO, "queuedEventDAO");
+        Asserts.notNull(queuedEventDAO, "QueuedEventDAO");
         this.queuedEventDAO = queuedEventDAO;
     }
 
@@ -41,7 +42,7 @@ public class DatabaseQueueEventSource extends AbstractDatabaseEventSource implem
      * @param eventSerializer 将被忽略
      */
     @Override
-    public void setEventSerializer(Event.EventSerializer eventSerializer) {
+    public void setEventSerializer(EventSerializer eventSerializer) {
         super.setEventSerializer(QUEUE_EVENT_SERIALIZER);
     }
 
@@ -97,7 +98,7 @@ public class DatabaseQueueEventSource extends AbstractDatabaseEventSource implem
             this.listenedEvents = null;
         }
     }
-    private static final Event.EventSerializer QUEUE_EVENT_SERIALIZER = new Event.EventSerializer<QueuedEvent>() {
+    private static final EventSerializer QUEUE_EVENT_SERIALIZER = new EventSerializer<QueuedEvent>() {
         @Override
         public QueuedEvent serialize(Event event) throws EventbusException {
             QueuedEvent queuedEvent = BeanConverter.eventToQueuedEvent(event);

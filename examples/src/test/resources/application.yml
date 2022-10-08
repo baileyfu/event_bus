@@ -11,8 +11,8 @@ eventbus:
   ### 当前节点配置
   terminal:
     name: serverName
-    ip: 127.0.0.1
-    port: 8080
+    ip: 127.0.0.1 #可不配置,自动获取当前IP
+    port: 8081
   source:
     consume:
       limit: 5 #每次消费5个事件

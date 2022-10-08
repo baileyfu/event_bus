@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import io.github.eventbus.constants.JSONConfig;
 import io.github.eventbus.core.sources.Event;
+import io.github.eventbus.core.sources.EventSerializer;
 import io.github.eventbus.core.terminal.Terminal;
 import io.github.eventbus.exception.EventbusException;
 import org.apache.commons.lang3.StringUtils;
@@ -16,7 +17,7 @@ import org.slf4j.LoggerFactory;
  * @date 2022-09-08 15:03
  * @description
  */
-public class JSONEventSerializer implements Event.EventSerializer<String> {
+public class JSONEventSerializer implements EventSerializer<String> {
     private static JSONEventSerializer INSTANCE;
     private Logger logger = LoggerFactory.getLogger(JSONEventSerializer.class);
 

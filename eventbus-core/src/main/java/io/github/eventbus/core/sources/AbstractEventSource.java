@@ -28,13 +28,13 @@ public abstract class AbstractEventSource implements EventSource, InitializingBe
 
     protected Logger logger = LoggerFactory.getLogger(this.getClass());
     protected Environment environment;
-    protected Terminal currentTerminal;
     //单次消费数量
     protected int consumeLimit;
+    protected Terminal currentTerminal;
     private String name;
     private boolean isMarching;
     private boolean isConsuming;
-    private Event.EventSerializer eventSerializer;
+    private EventSerializer eventSerializer;
 
     public AbstractEventSource(String name) {
         Assert.hasLength(name, "the EventSource'name can not be empty!");
@@ -46,7 +46,7 @@ public abstract class AbstractEventSource implements EventSource, InitializingBe
         this.environment = environment;
     }
 
-    public void setEventSerializer(Event.EventSerializer eventSerializer) {
+    public void setEventSerializer(EventSerializer eventSerializer) {
         this.eventSerializer = eventSerializer;
     }
 
