@@ -1,10 +1,12 @@
 package io.github.eventbus.core.sources;
 
 import io.github.eventbus.constants.EventSourceConfigConst;
+import io.github.eventbus.core.event.Event;
+import io.github.eventbus.core.event.EventSerializer;
 import io.github.eventbus.core.terminal.Terminal;
 import io.github.eventbus.core.terminal.TerminalFactory;
 import io.github.eventbus.exception.EventbusException;
-import io.github.eventbus.util.JSONEventSerializer;
+import io.github.eventbus.core.event.JSONEventSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;

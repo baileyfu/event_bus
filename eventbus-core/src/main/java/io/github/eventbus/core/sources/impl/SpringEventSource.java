@@ -1,7 +1,8 @@
 package io.github.eventbus.core.sources.impl;
 
 import io.github.eventbus.core.sources.AutoConsumeEventSource;
-import io.github.eventbus.core.sources.Event;
+import io.github.eventbus.core.event.Event;
+import io.github.eventbus.core.sources.EventConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;

@@ -1,8 +1,8 @@
 package io.github.eventbus.core.sources.impl.database;
 
 import io.github.eventbus.core.EBSub;
-import io.github.eventbus.core.sources.Event;
-import io.github.eventbus.core.sources.EventSerializer;
+import io.github.eventbus.core.event.Event;
+import io.github.eventbus.core.event.EventSerializer;
 import io.github.eventbus.core.sources.impl.database.dao.QueuedEventDAO;
 import io.github.eventbus.core.sources.impl.database.model.QueuedEvent;
 import io.github.eventbus.exception.EventbusException;

@@ -1,6 +1,6 @@
 package io.github.eventbus.util;
 
-import io.github.eventbus.core.sources.Event;
+import io.github.eventbus.core.event.Event;
 import io.github.eventbus.core.sources.impl.database.model.QueuedEvent;
 import io.github.eventbus.core.sources.impl.database.model.TopicalEvent;
 import org.apache.commons.lang3.StringUtils;

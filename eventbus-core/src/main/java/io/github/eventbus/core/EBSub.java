@@ -1,5 +1,6 @@
 package io.github.eventbus.core;
 
+import io.github.eventbus.core.sources.EventConsumer;
 import io.github.eventbus.core.sources.EventSource;
 import io.github.eventbus.core.sources.filter.SubFilterChain;
 import io.github.eventbus.exception.EventbusException;
@@ -20,13 +21,13 @@ import java.util.function.Function;
  */
 public class EBSub implements SubFilterChain.ListenedFilterChangingListener {
     private Logger logger = LoggerFactory.getLogger(EBSub.class);
-    private EventSource.EventConsumer noMatchedHandler = (eventSourceName, sourceTerminal, eventName, message) -> {
+    private EventConsumer noMatchedHandler = (eventSourceName, sourceTerminal, eventName, message) -> {
         if(logger.isDebugEnabled()){
             logger.debug(">>>---Eventbus received event '" + eventName + "' with message '"+message+"' from '"+sourceTerminal + "' on Eventsource '" + eventSourceName + "' , but no matched EventConsumer found.");
         }
         return false;
     };
-    private EventSource.EventConsumer filteredHandler = (eventSourceName, sourceTerminal, eventName, message) -> {
+    private EventConsumer filteredHandler = (eventSourceName, sourceTerminal, eventName, message) -> {
         if(logger.isDebugEnabled()){
             logger.debug(">>>---Eventbus received event '" + eventName + "' with message '"+message+"' from '"+sourceTerminal + "' on Eventsource '" + eventSourceName + "' , but it has been filtered.");
         }
@@ -34,11 +35,11 @@ public class EBSub implements SubFilterChain.ListenedFilterChangingListener {
     };
     private Collection<EventSource> sources;
     private Collection<ListenedEventChangingListener> eventChangingListeners;
-    private final Map<String, EventSource.EventConsumer> consumerMap;
+    private final Map<String, EventConsumer> consumerMap;
     private HashSet<String> filteredEvent;
-    private EventSource.EventConsumer uniqueEventConsumer;
+    private EventConsumer uniqueEventConsumer;
     //封装对consumerMap的操作
-    private Function<String, EventSource.EventConsumer> consumerGetter;
+    private Function<String, EventConsumer> consumerGetter;
     private final SubFilterChain subFilterChain;
 
     EBSub(Collection<EventSource> sources, SubFilterChain subFilterChain) {
@@ -50,7 +51,7 @@ public class EBSub implements SubFilterChain.ListenedFilterChangingListener {
             if (filteredEvent.contains(eventName)) {
                 return filteredHandler;
             }
-            EventSource.EventConsumer consumer = consumerMap.get(eventName);
+            EventConsumer consumer = consumerMap.get(eventName);
             return consumer == null ? noMatchedHandler : uniqueEventConsumer != null ? uniqueEventConsumer : consumer;
         };
         this.subFilterChain = subFilterChain;
@@ -89,7 +90,7 @@ public class EBSub implements SubFilterChain.ListenedFilterChangingListener {
         }
         invokeListenedEventChangingListener();
     }
-    private EventSource.EventConsumer handlerConvertToConsumer(EventBusListener.EventHandler eventHandler){
+    private EventConsumer handlerConvertToConsumer(EventBusListener.EventHandler eventHandler){
         return (eventSourceName, sourceTerminal, eventName, message) -> {
             eventHandler.handle(sourceTerminal, eventName, message);
             if(logger.isDebugEnabled()){

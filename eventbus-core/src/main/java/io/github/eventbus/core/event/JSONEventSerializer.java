@@ -1,10 +1,8 @@
-package io.github.eventbus.util;
+package io.github.eventbus.core.event;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import io.github.eventbus.constants.JSONConfig;
-import io.github.eventbus.core.sources.Event;
-import io.github.eventbus.core.sources.EventSerializer;
 import io.github.eventbus.core.terminal.Terminal;
 import io.github.eventbus.exception.EventbusException;
 import org.apache.commons.lang3.StringUtils;
