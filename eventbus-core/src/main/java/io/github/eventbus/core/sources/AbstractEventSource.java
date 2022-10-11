@@ -31,13 +31,14 @@ public abstract class AbstractEventSource implements EventSource, InitializingBe
     protected Environment environment;
     //单次消费数量
     protected int consumeLimit;
+
     private String name;
     private boolean isMarching;
     private boolean isConsuming;
     private EventSerializer eventSerializer;
 
     public AbstractEventSource(String name) {
-        Assert.hasLength(name, "the EventSource'name can not be empty!");
+        Assert.hasLength(name, "the " + this + "'name can not be empty!");
         this.name = name;
     }
 
@@ -50,12 +51,8 @@ public abstract class AbstractEventSource implements EventSource, InitializingBe
         this.eventSerializer = eventSerializer;
     }
 
-    protected <T> T serialize(Event event) throws EventbusException {
-        return (T) eventSerializer.serialize(event);
-    }
-
-    protected Event deserialize(Object serialized) throws EventbusException {
-        return eventSerializer.deserialize(serialized);
+    public EventSerializer getEventSerializer() {
+        return eventSerializer;
     }
 
     @Override
@@ -83,7 +80,7 @@ public abstract class AbstractEventSource implements EventSource, InitializingBe
     @Override
     public void push(String eventName, Object message) throws EventbusException {
         if (!isMarching) {
-            throw new EventbusException("EventSource " + name + " is halted!");
+            throw new EventbusException("EventSource " + name + " was halted!");
         }
         Event event = Event.EventBuilder.newInstance()
                 .name(eventName)
@@ -91,12 +88,12 @@ public abstract class AbstractEventSource implements EventSource, InitializingBe
                 .sourceTerminal(TerminalFactory.create())
                 .build();
         try {
-            save(event);
+            save(eventName, eventSerializer.serialize(event));
         } catch (Exception e) {
             throw new EventbusException("EventSource push error!", e);
         }
     }
-    abstract protected void save(Event event) throws Exception;
+    abstract protected void save(String eventName, Object serializedEvent) throws Exception;
 
     @Override
     public void consume(Function<String, EventConsumer> consumerGetter) throws EventbusException {
@@ -106,7 +103,14 @@ public abstract class AbstractEventSource implements EventSource, InitializingBe
         synchronized (this) {
             if (!isConsuming) {
                 try {
-                    startConsume(consumerGetter);
+                    startConsume((serializedEvent) -> {
+                        try {
+                            Event event = eventSerializer.deserialize(serializedEvent);
+                            return consumerGetter.apply(event.getName()).accept(name, event.getSourceTerminal(), event.getName(), event.getMessage());
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
                     isConsuming = true;
                 } catch (Exception e) {
                     throw new EventbusException("EventSource consume error!", e);
@@ -132,8 +136,8 @@ public abstract class AbstractEventSource implements EventSource, InitializingBe
     }
     /**
      * 启动消费,需对事件消费的异常进行处理以防止中断消费线程
-     * @param consumerGetter
+     * @param consumer
      */
-    abstract protected void startConsume(Function<String, EventConsumer> consumerGetter);
+    abstract protected void startConsume(Function<Object, Boolean> consumer);
     abstract protected void stopConsume();
 }

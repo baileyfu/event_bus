@@ -3,9 +3,9 @@ package io.github.eventbus.core.sources.impl.database;
 import io.github.ali.commons.beanutils.BeanCopierUtils;
 import io.github.ali.commons.variable.MixedActionGenerator;
 import io.github.eventbus.constants.EventSourceConfigConst;
-import io.github.eventbus.core.monitor.ResourceMonitor;
 import io.github.eventbus.core.event.Event;
 import io.github.eventbus.core.event.EventSerializer;
+import io.github.eventbus.core.monitor.ResourceMonitor;
 import io.github.eventbus.core.sources.impl.database.dao.TopicalEventDAO;
 import io.github.eventbus.core.sources.impl.database.dao.TopicalEventTerminalDAO;
 import io.github.eventbus.core.sources.impl.database.model.TopicalEvent;
@@ -19,6 +19,7 @@ import org.apache.http.util.Asserts;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * 发布-订阅型(Topic)-事件发给所有订阅的Terminal，但只能被每个Terminal集群节点中的一个节点消费一次<br/>
@@ -92,6 +93,7 @@ public class DatabaseTopicEventSource extends AbstractDatabaseEventSource {
             }
         });
     }
+
     protected String createCurrentTerminalId(Terminal terminal){
         return terminal.getName();
     }
@@ -158,41 +160,32 @@ public class DatabaseTopicEventSource extends AbstractDatabaseEventSource {
     }
 
     @Override
-    protected void save(Event event) throws Exception {
-        TopicalEvent topicalEvent = serialize(event);
+    protected void save(String eventName, Object serializedEvent) throws Exception {
+        //直接使用传入的对象
+        TopicalEvent topicalEvent = (TopicalEvent) serializedEvent;
         //TODO 缓存
         List<TopicalEventTerminal> activeTerminal = topicalEventTerminalDAO.selectActive(this.getName());
         if (activeTerminal != null && activeTerminal.size() > 0) {
             for (TopicalEventTerminal terminal : activeTerminal) {
-                TopicalEvent target = BeanCopierUtils.copyOne2One(topicalEvent, TopicalEvent.class);
-                target.setTerminalId(terminal.getTerminalId());
-                topicalEventDAO.insert(target);
+                topicalEvent.setTerminalId(terminal.getTerminalId());
+                topicalEventDAO.insert(topicalEvent);
             }
         }
     }
 
     @Override
-    protected Map<Long, Event> fetchAndSetUnconsumed() {
-        Map<Long, Event> unconsumedMap = null;
+    protected List<SerializedEventWrapper> fetchAndSetConsumed() {
         List<TopicalEvent> unconsumedList = topicalEventDAO.selectUnconsumedThenUpdateConsumed(terminalIdForRegister, consumeLimit, serializedTerminalForConsumed);
-        if (unconsumedList != null && unconsumedList.size() > 0) {
-            List<Long> queuedEventIdList = new ArrayList<>();
-            unconsumedMap = unconsumedList.parallelStream().reduce(new HashMap<>(), (map, topicalEvent) -> {
-                try {
-                    map.put(topicalEvent.getId(), deserialize(topicalEvent));
-                } catch (EventbusException ee) {
-                    throw new RuntimeException("deserialize TopicalEvent '" + topicalEvent + "' error !", ee);
-                }
-                queuedEventIdList.add(topicalEvent.getId());
-                return map;
-            }, (m, n) -> m);
-        }
-        return unconsumedMap;
+        return unconsumedList != null && unconsumedList.size() > 0
+                                                            ? unconsumedList.parallelStream()
+                                                                            .map(topicalEvent -> new SerializedEventWrapper(topicalEvent.getId(), topicalEvent))
+                                                                            .collect(Collectors.toList())
+                                                            : null;
     }
 
     @Override
-    protected void setUnconsumed(long eventId) throws Exception {
-        topicalEventDAO.updateStateToUnconsumed(eventId);
+    protected void setUnconsumed(SerializedEventWrapper serializedEventWrapper) throws Exception {
+        topicalEventDAO.updateStateToUnconsumed(serializedEventWrapper.getKey());
     }
 
     @Override

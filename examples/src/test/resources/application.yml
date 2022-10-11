@@ -30,4 +30,6 @@ eventbus:
 logging:
   level:
     io.github.eventbus: debug
+    #日志配置文件中设置此名称的logger可记录回滚失败的事件信息以手动回滚
+    io.github.eventbus.core.sources.impl.database.DatabaseTopicEventSource: error
 debug: true

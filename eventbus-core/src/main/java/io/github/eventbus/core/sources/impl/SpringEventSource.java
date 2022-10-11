@@ -1,10 +1,8 @@
 package io.github.eventbus.core.sources.impl;
 
-import io.github.eventbus.core.sources.AutoConsumeEventSource;
 import io.github.eventbus.core.event.Event;
-import io.github.eventbus.core.sources.EventConsumer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.github.eventbus.core.event.PrototypeEventSerializer;
+import io.github.eventbus.core.sources.AutoConsumeEventSource;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -23,7 +21,6 @@ import java.util.function.Function;
  * @description
  */
 public class SpringEventSource extends AutoConsumeEventSource implements ApplicationContextAware {
-    private Logger logger = LoggerFactory.getLogger(SpringEventSource.class);
     private AbstractApplicationContext applicationContext;
     private boolean running;
     public SpringEventSource(String name) {
@@ -32,19 +29,24 @@ public class SpringEventSource extends AutoConsumeEventSource implements Applica
     }
 
     @Override
-    public void startConsume(Function<String, EventConsumer> consumerGetter) {
+    public void afterPropertiesSet() throws Exception {
+        super.afterPropertiesSet();
+        setEventSerializer(PrototypeEventSerializer.getInstance());
+    }
+
+    @Override
+    public void startConsume(Function<Object, Boolean> consumer) {
         applicationContext.addApplicationListener((ApplicationListener<PayloadApplicationEvent>) applicationEvent -> {
             if (running) {
                 Object payload = applicationEvent.getPayload();
                 if (payload == null || !Event.class.isAssignableFrom(payload.getClass())) {
                     return;
                 }
-                Event event = (Event) applicationEvent.getPayload();
+                Object serializedEvent = applicationEvent.getPayload();
                 try {
-                    EventConsumer eventConsumer = consumerGetter.apply(event.getName());
-                    eventConsumer.accept(this.getName(), event.getSourceTerminal(), event.getName(), event.getMessage());
+                    consumer.apply(serializedEvent);
                 } catch (Exception e) {
-                    logger.error("SpringEventSource consume event '" + event.getName() + "' error!", e);
+                    logger.error("SpringEventSource consume event '" + serializedEvent + "' error!", e);
                 }
             }
         });
@@ -57,8 +59,8 @@ public class SpringEventSource extends AutoConsumeEventSource implements Applica
     }
 
     @Override
-    protected void save(Event event) throws Exception {
-        applicationContext.publishEvent(event);
+    protected void save(String eventName, Object serializedEvent) throws Exception {
+        applicationContext.publishEvent(serializedEvent);
     }
 
     @Override

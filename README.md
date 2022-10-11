@@ -265,4 +265,4 @@ END
 
 
 ### *注意事项
-1、使用DatabaseEventSource类型的事件源时，定义名为DatabaseEventSource.rollback.failed的日志记录器可以查看回滚失败（消费失败引起的回滚，以让事件可以再次被消费）的事件，手动重置事件状态以使其被再次消费；
+1、使用ManualConsumeEventSource类型的事件源时，定义名为具体事件源实现类全名（例如：使用DatabaseTopicEventSource则日志名为io.github.eventbus.core.sources.impl.database.DatabaseTopicEventSource）的日志记录器可以查看回滚失败（消费失败引起的回滚，以让事件可以再次被消费）的事件，手动重置事件状态以使其被再次消费；

@@ -11,8 +11,8 @@ import io.github.eventbus.core.terminal.Terminal;
 public interface EventConsumer {
     /**
      * 消费失败则抛出异常,事件源回滚事件状态以再次消费(由具体事件源实现决定)
-     * @param eventSourceName
-     * @param sourceTerminal
+     * @param eventSourceName 当前事件源名称
+     * @param sourceTerminal 事件发送终端
      * @param eventName
      * @param message
      * @return 是否正常消费（不同于消费失败,比如被过滤）

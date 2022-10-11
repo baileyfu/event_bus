@@ -5,19 +5,13 @@ import io.github.ali.commons.variable.MixedActionGenerator;
 import io.github.eventbus.constants.EventSourceConfigConst;
 import io.github.eventbus.constants.JSONConfig;
 import io.github.eventbus.core.monitor.ResourceMonitor;
-import io.github.eventbus.core.event.Event;
-import io.github.eventbus.core.sources.EventConsumer;
 import io.github.eventbus.core.sources.ManualConsumeEventSource;
 import io.github.eventbus.core.terminal.Terminal;
 import io.github.eventbus.core.terminal.TerminalFactory;
 import io.github.eventbus.exception.EventbusException;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 
 /**
  * 数据库事件源基类<br/>
@@ -36,7 +30,6 @@ public abstract class AbstractDatabaseEventSource extends ManualConsumeEventSour
     public static final int DEFAULT_CLEAN_CYCLE = 1;
     public static final int MIN_CLEAN_CYCLE = 1;
 
-    private Logger rollbackFailedLogger = LoggerFactory.getLogger("DatabaseEventSource.rollback.failed");
     //是否需要清理已消费事件
     protected Boolean cleaningRequired;
     //清理已消费事件的间隔（单位：小时）
@@ -95,49 +88,13 @@ public abstract class AbstractDatabaseEventSource extends ManualConsumeEventSour
         this.cleaningRequired = cleaningRequired;
     }
 
-    @Override
-    public int doConsume(Function<String, EventConsumer> consumerGetter) throws EventbusException {
-        int consumedCount = 0;
-        try{
-            Map<Long, Event> waitingEvents = fetchAndSetUnconsumed();
-            if (waitingEvents != null && waitingEvents.size() > 0) {
-                for (Long eventId : waitingEvents.keySet()) {
-                    Event event = waitingEvents.get(eventId);
-                    try {
-                        if (consumerGetter.apply(event.getName()).accept(this.getName(), event.getSourceTerminal(), event.getName(), event.getMessage())) {
-                            consumedCount++;
-                        }
-                    } catch (Exception e) {
-                        logger.error("DatabaseEventSource consume error with '" + event + "'!", e);
-                        //单个事件消费失败不影响其他事件的消费
-                        rollback(eventId, event);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            throw new EventbusException("DatabaseEventSource.consume() error !", e);
-        }
-        return consumedCount;
-    }
-
     /**
-     * 将事件状态重制为unconsumed
-     * @param eventId
-     * @param event
+     * 清理已消费事件
+     * @throws Exception
      */
-    protected void rollback(long eventId, Event event) {
-        try {
-            setUnconsumed(eventId);
-        } catch (Exception e) {
-            logger.error("DatabaseEventSource rollback error with '" + eventId + "'!", e);
-            rollbackFailedLogger.error("DatabaseEventSource rollback consumed failed , the eventId is " + eventId + " , the event payload : " + JSON.toJSONString(event));
-        }
-    }
-
-    abstract protected Map<Long,Event> fetchAndSetUnconsumed() throws Exception;
-    abstract protected void setUnconsumed(long eventId) throws Exception;
     abstract protected void clean() throws Exception;
 
+    /*** 序列化message和terminal ***/
     protected static String serializeMessage(Object message) throws EventbusException {
         try {
             return message == null ? StringUtils.EMPTY : JSON.toJSONString(message, JSONConfig.SERIALIZER_FEATURE_ARRAY);
