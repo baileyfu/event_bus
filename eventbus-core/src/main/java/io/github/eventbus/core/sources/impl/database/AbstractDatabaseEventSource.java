@@ -34,7 +34,7 @@ public abstract class AbstractDatabaseEventSource extends ManualConsumeEventSour
     protected Boolean cleaningRequired;
     //清理已消费事件的间隔（单位：小时）
     protected int cleanCycle;
-    protected String serializedTerminalForConsumed;
+    private String serializedTerminalForConsumed;
 
     public AbstractDatabaseEventSource(String name) {
         super(name);
@@ -43,7 +43,6 @@ public abstract class AbstractDatabaseEventSource extends ManualConsumeEventSour
     @Override
     public void afterPropertiesSet() throws Exception {
         super.afterPropertiesSet();
-        this.serializedTerminalForConsumed = serializeTerminal(TerminalFactory.create());
         if (cleaningRequired == null) {
             setCleaningRequired(Boolean.valueOf(environment.getProperty(EventSourceConfigConst.MANUAL_DATABASE_CLEAN_REQUIRED, String.valueOf(DEFAULT_CLEAN_REQUIRED))));
         }
@@ -86,6 +85,21 @@ public abstract class AbstractDatabaseEventSource extends ManualConsumeEventSour
 
     public void setCleaningRequired(boolean cleaningRequired) {
         this.cleaningRequired = cleaningRequired;
+    }
+
+    /**
+     * 消费事件的终端信息
+     * @return
+     */
+    protected String getTargetTerminal() {
+        if (serializedTerminalForConsumed == null) {
+            try {
+                serializedTerminalForConsumed = serializeTerminal(TerminalFactory.create());
+            } catch (EventbusException e) {
+                logger.error(this + ".getTargetTerminal() error!", e);
+            }
+        }
+        return serializedTerminalForConsumed;
     }
 
     /**

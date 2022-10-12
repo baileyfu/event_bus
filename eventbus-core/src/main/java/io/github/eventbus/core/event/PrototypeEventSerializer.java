@@ -1,4 +1,4 @@
-﻿package io.github.eventbus.core.event;
+package io.github.eventbus.core.event;
 
 import io.github.eventbus.exception.EventbusException;
 

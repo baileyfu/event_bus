@@ -55,7 +55,7 @@ public class DatabaseQueueEventSource extends AbstractDatabaseEventSource implem
             logger.info("DatabaseQueueEventSource.fetchAndSetUnconsumed() listenedEvents is empty , no event will be fetched.");
             return null;
         }
-        List<QueuedEvent> unconsumedList = queuedEventDAO.selectUnconsumedThenUpdateConsumed(listenedEvents, consumeLimit, serializedTerminalForConsumed);
+        List<QueuedEvent> unconsumedList = queuedEventDAO.selectUnconsumedThenUpdateConsumed(listenedEvents, consumeLimit, getTargetTerminal());
         return unconsumedList != null && unconsumedList.size() > 0
                                                             ? unconsumedList.parallelStream()
                                                                             .map(queuedEvent -> new SerializedEventWrapper(queuedEvent.getId(), queuedEvent))

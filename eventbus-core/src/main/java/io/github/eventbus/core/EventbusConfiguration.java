@@ -27,8 +27,8 @@ import java.util.Map;
 @Configuration
 public class EventbusConfiguration{
     @Bean
-    public TerminalFactory terminalFactory(){
-        return new TerminalFactory();
+    public TerminalFactory terminalFactory(Environment environment){
+        return new TerminalFactory(environment);
     }
     @Bean
     public EventBusBroadcaster eventBusBroadcaster(ApplicationContext applicationContext,Environment environment){

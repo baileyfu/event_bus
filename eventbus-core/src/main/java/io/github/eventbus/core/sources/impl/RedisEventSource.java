@@ -1,4 +1,4 @@
-﻿package io.github.eventbus.core.sources.impl;
+package io.github.eventbus.core.sources.impl;
 
 import com.alibaba.fastjson.support.spring.FastJsonRedisSerializer;
 import io.github.eventbus.core.EBSub;

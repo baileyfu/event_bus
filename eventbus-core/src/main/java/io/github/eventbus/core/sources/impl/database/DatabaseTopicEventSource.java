@@ -175,7 +175,7 @@ public class DatabaseTopicEventSource extends AbstractDatabaseEventSource {
 
     @Override
     protected List<SerializedEventWrapper> fetchAndSetConsumed() {
-        List<TopicalEvent> unconsumedList = topicalEventDAO.selectUnconsumedThenUpdateConsumed(terminalIdForRegister, consumeLimit, serializedTerminalForConsumed);
+        List<TopicalEvent> unconsumedList = topicalEventDAO.selectUnconsumedThenUpdateConsumed(terminalIdForRegister, consumeLimit, getTargetTerminal());
         return unconsumedList != null && unconsumedList.size() > 0
                                                             ? unconsumedList.parallelStream()
                                                                             .map(topicalEvent -> new SerializedEventWrapper(topicalEvent.getId(), topicalEvent))
