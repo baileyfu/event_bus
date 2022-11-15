@@ -7,6 +7,7 @@ import org.springframework.core.Ordered;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * 资源管理器<br/>
@@ -25,35 +26,31 @@ public abstract class ResourceMonitor implements Ordered {
         return Ordered.LOWEST_PRECEDENCE;
     }
 
-    protected void doStart() {
-        synchronized (ResourceMonitor.class) {
-            if (!STARTED) {
-                String logHead = "Eventbus." + this.getClass().getSimpleName();
-                SWITCHES.stream().forEach((Switch) -> {
-                    Switch.on();
-                    LOGGER.info(logHead + " has started action of [" + Switch.identify() + "]");
-                });
-                LOGGER.info(logHead + " has already started all resource!!!");
-                STARTED = true;
-            }
+    protected synchronized void doStart() {
+        if (!STARTED) {
+            String logHead = "Eventbus." + this.getClass().getSimpleName();
+            SWITCHES.stream().forEach((Switch) -> {
+                Switch.on();
+                LOGGER.info(logHead + " has started action of [" + Switch.identify() + "]");
+            });
+            LOGGER.info(logHead + " has already started all resource!!!");
+            STARTED = true;
         }
     }
-    protected void doStop() {
-        synchronized (ResourceMonitor.class) {
-            if (STARTED) {
-                String logHead = "Eventbus." + this.getClass().getSimpleName();
-                SWITCHES.stream().forEach((Switch) -> {
-                    try {
-                        Switch.off();
-                        LOGGER.info(logHead + " has stopped action of [" + Switch.identify()+"]");
-                    } catch (Exception e) {
-                        LOGGER.error(logHead + ".doStop() error!", e);
-                    }
-                });
-                MixedActionGenerator.shutdown();
-                LOGGER.info(logHead + " has already stopped all resource!!!");
-                STARTED = false;
-            }
+    protected synchronized void doStop() {
+        if (STARTED) {
+            String logHead = "Eventbus." + this.getClass().getSimpleName();
+            SWITCHES.stream().forEach((Switch) -> {
+                try {
+                    Switch.off();
+                    LOGGER.info(logHead + " has stopped action of [" + Switch.identify() + "]");
+                } catch (Exception e) {
+                    LOGGER.error(logHead + ".doStop() error!", e);
+                }
+            });
+            MixedActionGenerator.shutdown();
+            LOGGER.info(logHead + " has already stopped all resource!!!");
+            STARTED = false;
         }
     }
 
@@ -62,28 +59,36 @@ public abstract class ResourceMonitor implements Ordered {
      * @param Switch
      */
     public static void registerResource(Switch Switch) {
-        SWITCHES.add(Switch);
+        if (!SWITCHES.contains(Switch)) {
+            SWITCHES.add(Switch);
+        }
     }
     private static List<Switch> SWITCHES = new ArrayList<>();
-    public interface Switch {
-        default void on() {
+    public static abstract class Switch {
+        private void on() {
             try {
                 doOn();
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         }
-        default String identify(){
-            return this.toString();
-        }
-        default void off() {
+        private void off() {
             try {
                 doOff();
             } catch (Exception e) {
                 LOGGER.error("ResourceMonitor.Switch." + identify() + ".off() error!", e);
             }
         }
-        void doOn() throws Exception;
-        void doOff() throws Exception;
+        protected abstract void doOn() throws Exception;
+        protected abstract void doOff() throws Exception;
+        protected abstract String identify();
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == null || !(obj instanceof Switch)) {
+                return false;
+            }
+            return Objects.equals(identify(), ((Switch) obj).identify());
+        }
     }
 }
