@@ -47,11 +47,9 @@ public class EDAConfiguration {
         return new DatabaseTopicEventClusterSource(EVENTBUS_SOURCE_DURABLE_TOPIC_CLUSTER, topicalEventWithDumpAnnotationMapper, topicalEventTerminalAnnotationMapper);
     }
     //发送的事件路由---非必配，不配置则所有事件发送到所有的事件源
+    //可配置多个，优先级高的先匹配；默认最低优先级
     @Bean
     public PubRouter eventbusPubRouter() {
-        String[] localEventSource = new String[]{EVENTBUS_SOURCE_LOCAL};
-        String[] durableEventSource = new String[]{EVENTBUS_SOURCE_DURABLE_TOPIC, EVENTBUS_SOURCE_DURABLE_TOPIC_CLUSTER};
-        String[] all = new String[]{EVENTBUS_SOURCE_LOCAL, EVENTBUS_SOURCE_DURABLE_QUEUE, EVENTBUS_SOURCE_DURABLE_TOPIC, EVENTBUS_SOURCE_DURABLE_TOPIC_CLUSTER};
         //discussion发送给所有durable，不发送到本地
         //learning只发送到本地
         //user发送既发送给所有durable，也发送到本地
@@ -61,6 +59,24 @@ public class EDAConfiguration {
                                 : eventName.startsWith("user.") ? all
                                                                           : null;
     }
+    //优先级更高的路由器，user事件会被发送到localEventSource
+    @Bean
+    public PubRouter highPriorityEventbusPubRouter() {
+        return new PubRouter(){
+            @Override
+            public String[] route(String eventName) {
+                //没有匹配到条件则返回null，让下一个路由器继续工作
+                return eventName.startsWith("user.") ? localEventSource : null;
+            }
+            @Override
+            public int getPriority() {
+                return PubRouter.super.getPriority() + 1;
+            }
+        };
+    }
+    String[] localEventSource = new String[]{EVENTBUS_SOURCE_LOCAL};
+    String[] durableEventSource = new String[]{EVENTBUS_SOURCE_DURABLE_TOPIC, EVENTBUS_SOURCE_DURABLE_TOPIC_CLUSTER};
+    String[] all = new String[]{EVENTBUS_SOURCE_LOCAL, EVENTBUS_SOURCE_DURABLE_QUEUE, EVENTBUS_SOURCE_DURABLE_TOPIC, EVENTBUS_SOURCE_DURABLE_TOPIC_CLUSTER};
     //接收的事件过滤---非必配，不配置则接收所有的事件,但是否消费取决于是否分发对事件的处理
     @Bean
     public SubFilter eventbusSubFilter(){

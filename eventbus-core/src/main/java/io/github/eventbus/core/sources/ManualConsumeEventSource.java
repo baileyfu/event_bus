@@ -1,9 +1,13 @@
 package io.github.eventbus.core.sources;
 
+import com.alibaba.fastjson.JSON;
 import io.github.ali.commons.variable.MixedActionGenerator;
 import io.github.eventbus.constants.EventSourceConfigConst;
 import io.github.eventbus.exception.EventbusException;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
@@ -25,6 +29,7 @@ public abstract class ManualConsumeEventSource extends AbstractEventSource{
     private long consumeInterval;
     //事件列表未空时消费线程暂停事件
     private long pauseIfNotConsumed;
+    private String actionNameOfConsuming;
     public ManualConsumeEventSource(String name) {
         super(name);
     }
@@ -38,6 +43,11 @@ public abstract class ManualConsumeEventSource extends AbstractEventSource{
         if (pauseIfNotConsumed < MIN_CONSUME_PAUSE) {
             setPauseIfNotConsumed(Long.valueOf(environment.getProperty(EventSourceConfigConst.MANUAL_PAUSE_IF_NOT_CONSUMED, String.valueOf(DEFAULT_CONSUME_PAUSE))));
         }
+        actionNameOfConsuming = new StringBuilder()
+                                    .append("Eventbus.EventSource.")
+                                    .append(getName())
+                                    .append(".consuming")
+                                    .toString();
     }
 
     public void setConsumeInterval(long consumeInterval) {
@@ -57,11 +67,32 @@ public abstract class ManualConsumeEventSource extends AbstractEventSource{
     }
 
     @Override
-    protected void startConsume(Function<String, EventConsumer> consumerGetter) {
-        MixedActionGenerator.loadAction(generateActionName(),consumeInterval, TimeUnit.MILLISECONDS,()->{
+    protected void startConsume(Function<Object, Boolean> consumer) {
+        MixedActionGenerator.loadAction(actionNameOfConsuming,consumeInterval, TimeUnit.MILLISECONDS,()->{
             try {
+                int consumedCount = 0;
+                List<SerializedEventWrapper> unconsumedSerializedEventWrapperList = fetchAndSetConsumed();
+                if (unconsumedSerializedEventWrapperList != null && unconsumedSerializedEventWrapperList.size() > 0) {
+                    for (SerializedEventWrapper serializedEventWrapper : unconsumedSerializedEventWrapperList) {
+                        try {
+                            if (consumer.apply(serializedEventWrapper.getSerializedEvent())) {
+                                consumedCount++;
+                            }
+                        } catch (Exception e) {
+                            logger.error(this + " consume error with '" + SerializedEventWrapperToString(serializedEventWrapper) + "'!", e);
+                            //单个事件消费失败不影响其他事件的消费
+                            try {
+                                //将事件状态重制为unconsumed
+                                setUnconsumed(serializedEventWrapper);
+                            } catch (Exception rollbackException) {
+                                logger.error(this + " rollback error for Event '" + serializedEventWrapper + "!", rollbackException);
+                                LoggerFactory.getLogger(this.getClass()).error(this + " rollback consumed failed , the event is " + SerializedEventWrapperToString(serializedEventWrapper));
+                            }
+                        }
+                    }
+                }
                 // 如果没消费到消息则暂停x毫秒
-                if (doConsume(consumerGetter) == 0 && pauseIfNotConsumed > 0) {
+                if (consumedCount == 0 && pauseIfNotConsumed > 0) {
                     Thread.sleep(pauseIfNotConsumed);
                 }
             } catch (Exception e) {
@@ -79,14 +110,57 @@ public abstract class ManualConsumeEventSource extends AbstractEventSource{
     @Override
     protected void stopConsume() {
         //由ResourceReleaser来负责最终的释放
-        MixedActionGenerator.unloadAction(generateActionName(),false);
+        MixedActionGenerator.unloadAction(actionNameOfConsuming,false);
     }
-    private String generateActionName() {
-        return new StringBuilder()
-                .append("Eventbus.EventSource.")
-                .append(getName())
-                .append(".consuming")
-                .toString();
+
+    private String SerializedEventWrapperToString(SerializedEventWrapper serializedEventWrapper){
+        try {
+            return new ToStringBuilder("Event")
+                    .append("key", serializedEventWrapper.key)
+                    .append("value", JSON.toJSONString(getEventSerializer().deserialize(serializedEventWrapper.serializedEvent)))
+                    .toString();
+        } catch (EventbusException e) {
+            logger.error("SerializedEventWrapperToString error!", e);
+            return serializedEventWrapper.toString();
+        }
     }
-    abstract protected int doConsume(Function<String, EventConsumer> consumerGetter) throws EventbusException;
+    /**
+     * 查询待消费事件并将其设置为已消费
+     * @return
+     * @throws Exception
+     */
+    abstract protected List<SerializedEventWrapper> fetchAndSetConsumed() throws Exception;
+
+    /**
+     * 回滚事件的消费
+     * @param serializedEventWrapper
+     * @throws Exception
+     */
+    abstract protected void setUnconsumed(SerializedEventWrapper serializedEventWrapper) throws Exception;
+
+    protected static class SerializedEventWrapper{
+        private Object key;
+        private Object serializedEvent;
+
+        public SerializedEventWrapper(Object key, Object serializedEvent) {
+            this.key = key;
+            this.serializedEvent = serializedEvent;
+        }
+
+        public <T> T getKey() {
+            return (T) key;
+        }
+
+        public <T> T getSerializedEvent() {
+            return (T) serializedEvent;
+        }
+
+        @Override
+        public String toString() {
+            return new ToStringBuilder(this)
+                    .append("key", key)
+                    .append("serializedEvent", serializedEvent)
+                    .toString();
+        }
+    }
 }

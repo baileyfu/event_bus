@@ -256,6 +256,14 @@ BEGIN
 END
 ```
 
+#### 3、RedisEventSource
+
+队列型(Queue)-事件只能被**所有订阅的客户端中的一个客户端的一个节点消费一次**。
+
+基于Redis实现事件持久化，**消费失败回滚即重新放入Redis**。
+
+对Redis的操作基于org.springframework.data.redis，暂不支持选库，RedisTemplate配置好后构造RedisEventSource时传入即可。
+
 ### 二、序列化
 事件源在存入事件前/取出事件后，都会对事件进行序列化/反序列化。
 
@@ -265,4 +273,4 @@ END
 
 
 ### *注意事项
-1、使用DatabaseEventSource类型的事件源时，定义名为DatabaseEventSource.rollback.failed的日志记录器可以查看回滚失败（消费失败引起的回滚，以让事件可以再次被消费）的事件，手动重置事件状态以使其被再次消费；
+1、使用ManualConsumeEventSource类型的事件源时，定义名为具体事件源实现类全名（例如：使用DatabaseTopicEventSource则日志名为io.github.eventbus.core.sources.impl.database.DatabaseTopicEventSource）的日志记录器可以查看回滚失败（消费失败引起的回滚，以让事件可以再次被消费）的事件，手动重置事件状态以使其被再次消费；

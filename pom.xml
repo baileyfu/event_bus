@@ -20,8 +20,8 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
 
-        <eventbus-core.version>1.0.0-SNAPSHOT</eventbus-core.version>
-        <eventbus-starter.version>1.0.0-SNAPSHOT</eventbus-starter.version>
+        <eventbus-core.version>1.1.0-SNAPSHOT</eventbus-core.version>
+        <eventbus-starter.version>1.1.0-SNAPSHOT</eventbus-starter.version>
         <spring-boot.version>2.5.3</spring-boot.version>
         <io.github.commons.version>1.1.0-SNAPSHOT</io.github.commons.version>
     </properties>

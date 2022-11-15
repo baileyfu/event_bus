@@ -9,10 +9,8 @@ import io.github.eventbus.exception.EventbusException;
 import io.github.eventbus.util.BeanConverter;
 import org.apache.http.util.Asserts;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 队列型(Queue)-事件只能被所有订阅的Terminal中的一个Terminal的一个节点消费一次<br/>
@@ -47,36 +45,27 @@ public class DatabaseQueueEventSource extends AbstractDatabaseEventSource implem
     }
 
     @Override
-    protected void save(Event event) throws Exception {
-        queuedEventDAO.insert(serialize(event));
+    protected void save(String eventName, Object serializedEvent) throws Exception {
+        queuedEventDAO.insert((QueuedEvent) serializedEvent);
     }
 
     @Override
-    protected Map<Long, Event> fetchAndSetUnconsumed() throws Exception {
+    protected List<SerializedEventWrapper> fetchAndSetConsumed() throws Exception {
         if (listenedEvents == null) {
             logger.info("DatabaseQueueEventSource.fetchAndSetUnconsumed() listenedEvents is empty , no event will be fetched.");
             return null;
         }
-        Map<Long, Event> unconsumedMap = null;
-        List<QueuedEvent> unconsumedList = queuedEventDAO.selectUnconsumedThenUpdateConsumed(listenedEvents, consumeLimit, serializedTerminalForConsumed);
-        if (unconsumedList != null && unconsumedList.size() > 0) {
-            List<Long> queuedEventIdList = new ArrayList<>();
-            unconsumedMap = unconsumedList.parallelStream().reduce(new HashMap<>(), (map, queuedEvent) -> {
-                try {
-                    map.put(queuedEvent.getId(), deserialize(queuedEvent));
-                } catch (EventbusException ee) {
-                    throw new RuntimeException("deserialize QueuedEvent '" + queuedEvent + "' error !", ee);
-                }
-                queuedEventIdList.add(queuedEvent.getId());
-                return map;
-            }, (m, n) -> m);
-        }
-        return unconsumedMap;
+        List<QueuedEvent> unconsumedList = queuedEventDAO.selectUnconsumedThenUpdateConsumed(listenedEvents, consumeLimit, getTargetTerminal());
+        return unconsumedList != null && unconsumedList.size() > 0
+                                                            ? unconsumedList.parallelStream()
+                                                                            .map(queuedEvent -> new SerializedEventWrapper(queuedEvent.getId(), queuedEvent))
+                                                                            .collect(Collectors.toList())
+                                                            : null;
     }
 
     @Override
-    protected void setUnconsumed(long eventId) throws Exception {
-        queuedEventDAO.updateStateToUnconsumed(eventId);
+    protected void setUnconsumed(SerializedEventWrapper serializedEventWrapper) throws Exception {
+        queuedEventDAO.updateStateToUnconsumed(serializedEventWrapper.getKey());
     }
 
     @Override
