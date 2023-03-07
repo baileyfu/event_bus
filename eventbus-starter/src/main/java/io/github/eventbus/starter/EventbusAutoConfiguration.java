@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Import;
  * @date 2022-10-08 10:55
  * @description
  */
-//@ConditionalOnMissingBean(EventbusConfiguration.class)
+@ConditionalOnMissingBean(EventbusConfiguration.class)
 @Configuration
 @Import(EventbusConfiguration.class)
 public class EventbusAutoConfiguration {

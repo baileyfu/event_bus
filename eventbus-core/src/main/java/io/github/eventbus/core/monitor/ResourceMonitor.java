@@ -24,7 +24,7 @@ public abstract class ResourceMonitor implements DisposableBean, Ordered {
 
     @Override
     public int getOrder() {
-        return Ordered.LOWEST_PRECEDENCE;
+        return Ordered.HIGHEST_PRECEDENCE;
     }
 
     protected synchronized void doStart() {
