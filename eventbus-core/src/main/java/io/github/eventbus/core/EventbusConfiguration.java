@@ -10,6 +10,10 @@ import io.github.eventbus.core.sources.filter.SubFilterChain;
 import io.github.eventbus.core.sources.route.PubRouter;
 import io.github.eventbus.core.sources.route.PubRouterChain;
 import io.github.eventbus.core.terminal.TerminalFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
+import org.springframework.boot.context.event.ApplicationStartedEvent;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -53,10 +57,12 @@ public class EventbusConfiguration{
         boolean lsnOpen = environment.getProperty(EventbusConfigConst.LSN_OPEN,Boolean.class,true);
         return new EventBusListener(ebsub, handlerMap == null ? null : handlerMap.values(), open && lsnOpen);
     }
-    //@Bean
+    @ConditionalOnClass(ApplicationStartedEvent.class)
+    @Bean
     public ResourceMonitor springbootResourceMonitor(){
         return new SpringbootResourceMonitor();
     }
+    @ConditionalOnMissingClass("org.springframework.boot.context.event.ApplicationStartedEvent")
     @Bean
     public ResourceMonitor springResourceMonitor(){
         return new SpringResourceMonitor();

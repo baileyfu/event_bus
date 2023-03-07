@@ -52,7 +52,7 @@ public class DatabaseQueueEventSource extends AbstractDatabaseEventSource implem
     @Override
     protected List<SerializedEventWrapper> fetchAndSetConsumed() throws Exception {
         if (listenedEvents == null) {
-            logger.info("DatabaseQueueEventSource.fetchAndSetUnconsumed() listenedEvents is empty , no event will be fetched.");
+            logger.debug("DatabaseQueueEventSource('{}').fetchAndSetUnconsumed() listenedEvents is empty , no event will be fetched.", getName());
             return null;
         }
         List<QueuedEvent> unconsumedList = queuedEventDAO.selectUnconsumedThenUpdateConsumed(listenedEvents, consumeLimit, getTargetTerminal());

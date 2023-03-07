@@ -3,6 +3,7 @@ package io.github.eventbus.core.monitor;
 import io.github.ali.commons.variable.MixedActionGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.core.Ordered;
 
 import java.util.ArrayList;
@@ -17,7 +18,7 @@ import java.util.Objects;
  * @date 2022-09-16 10:55
  * @description
  */
-public abstract class ResourceMonitor implements Ordered {
+public abstract class ResourceMonitor implements DisposableBean, Ordered {
     private static Logger LOGGER = LoggerFactory.getLogger(ResourceMonitor.class);
     private static boolean STARTED;
 
@@ -52,6 +53,11 @@ public abstract class ResourceMonitor implements Ordered {
             LOGGER.info(logHead + " has already stopped all resource!!!");
             STARTED = false;
         }
+    }
+
+    @Override
+    public void destroy() throws Exception {
+        doStop();
     }
 
     /**

@@ -64,7 +64,7 @@ public class RedisEventSource extends ManualConsumeEventSource implements EBSub.
     @Override
     protected List<SerializedEventWrapper> fetchAndSetConsumed() throws Exception {
         if (listenedEvents == null) {
-            logger.info("RedisEventSource.fetchAndSetUnconsumed() listenedEvents is empty , no event will be fetched.");
+            logger.debug("RedisEventSource('{}').fetchAndSetUnconsumed() listenedEvents is empty , no event will be fetched.", getName());
             return null;
         }
         List<SerializedEventWrapper> unconsumedSerializedEventWrapperList = null;

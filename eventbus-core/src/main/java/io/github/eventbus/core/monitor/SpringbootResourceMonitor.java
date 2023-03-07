@@ -1,6 +1,5 @@
 package io.github.eventbus.core.monitor;
 
-import org.springframework.beans.factory.DisposableBean;
 import org.springframework.boot.context.event.ApplicationStartedEvent;
 import org.springframework.context.ApplicationListener;
 
@@ -12,14 +11,9 @@ import org.springframework.context.ApplicationListener;
  * @date 2022-09-13 10:55
  * @description
  */
-public class SpringbootResourceMonitor extends ResourceMonitor implements ApplicationListener<ApplicationStartedEvent>, DisposableBean {
+public class SpringbootResourceMonitor extends ResourceMonitor implements ApplicationListener<ApplicationStartedEvent> {
     @Override
     public void onApplicationEvent(ApplicationStartedEvent applicationStartedEvent) {
         doStart();
-    }
-
-    @Override
-    public void destroy() throws Exception {
-        doStop();
     }
 }
